@@ -85,7 +85,6 @@ export default function Orders() {
       if (error) throw error;
       setOrders(data || []);
     } catch (error) {
-      console.error("Error fetching orders:", error);
       toast({
         title: "Erreur",
         description: "Impossible de charger les commandes",
@@ -106,7 +105,7 @@ export default function Orders() {
       if (error) throw error;
       setOrderItems(data || []);
     } catch (error) {
-      console.error("Error fetching order items:", error);
+      // Error fetching order items
     }
   };
 

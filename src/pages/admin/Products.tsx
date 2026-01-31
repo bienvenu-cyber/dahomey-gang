@@ -106,7 +106,6 @@ export default function Products() {
       
       setProducts(transformedData);
     } catch (error) {
-      console.error("Error fetching products:", error);
       toast({
         title: "Erreur",
         description: "Impossible de charger les produits",
@@ -122,7 +121,7 @@ export default function Products() {
       const { data } = await supabase.from("categories").select("id, name, slug");
       setCategories(data || []);
     } catch (error) {
-      console.error("Error fetching categories:", error);
+      // Error fetching categories
     }
   };
 
@@ -176,7 +175,6 @@ export default function Products() {
       setFormData(defaultProduct);
       fetchProducts();
     } catch (error: any) {
-      console.error("Error saving product:", error);
       toast({
         title: "Erreur",
         description: error.message || "Impossible de sauvegarder le produit",

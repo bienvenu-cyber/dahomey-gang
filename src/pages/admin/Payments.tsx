@@ -57,7 +57,7 @@ export default function Payments() {
 
       setStats({ totalRevenue, paidCount, pendingCount, failedCount });
     } catch (error) {
-      console.error("Error fetching payments:", error);
+      // Error fetching payments
     } finally {
       setLoading(false);
     }

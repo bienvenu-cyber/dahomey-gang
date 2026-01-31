@@ -34,7 +34,7 @@ export default function Customers() {
       if (error) throw error;
       setCustomers(data || []);
     } catch (error) {
-      console.error("Error fetching customers:", error);
+      // Error fetching customers
     } finally {
       setLoading(false);
     }

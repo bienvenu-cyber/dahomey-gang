@@ -61,7 +61,7 @@ export default function Settings() {
       if (error) throw error;
       setShippingOptions(data || []);
     } catch (error) {
-      console.error("Error fetching shipping settings:", error);
+      // Error fetching shipping settings
     } finally {
       setLoading(false);
     }
@@ -98,7 +98,6 @@ export default function Settings() {
 
       toast({ title: "Paramètres enregistrés" });
     } catch (error) {
-      console.error("Error saving settings:", error);
       toast({ title: "Erreur lors de l'enregistrement", variant: "destructive" });
     } finally {
       setSaving(false);

@@ -54,14 +54,14 @@ export default function Home() {
   return (
     <main>
       {/* Hero Section */}
-      <section className="relative min-h-screen flex items-center">
+      <section className="relative min-h-screen flex items-center pt-10">
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{ backgroundImage: `url(${heroBg})` }}
         />
         <div className="overlay-dark" />
         
-        <div className="container-custom relative z-10 pt-24">
+        <div className="container-custom relative z-10 pt-32">
           <div className="max-w-2xl animate-fade-up">
             <span className="inline-block px-4 py-2 bg-secondary/20 text-secondary rounded-full text-sm font-semibold mb-6">
               Nouvelle Collection 2025
@@ -200,13 +200,10 @@ export default function Home() {
                 L'Esprit du <span className="text-secondary">Dahomey</span>
               </h2>
               <p className="text-white/70 mb-6 leading-relaxed">
-                Dahomey-Gang est né d'une passion pour l'histoire et la culture du 
-                Royaume du Dahomey. Nos créations s'inspirent des légendaires Amazones 
-                du Dahomey, ces guerrières intrépides qui ont marqué l'histoire africaine.
+                Dahomey-Gang est bien plus qu'une marque de mode : c'est une célébration vibrante de l'héritage africain à travers des créations contemporaines. Fondée par DJIVO Nolhan Marvin.F, la marque s'inspire du royaume historique du Dahomey (aujourd'hui Bénin) et fusionne tradition et modernité avec audace.
               </p>
               <p className="text-white/70 mb-8 leading-relaxed">
-                Chaque pièce est conçue avec soin, alliant qualité premium et designs 
-                uniques qui célèbrent notre héritage tout en embrassant le streetwear contemporain.
+                Chaque pièce est conçue avec une attention méticuleuse, alliant qualité artisanale et designs innovants. Nos collections racontent des histoires, honorant la richesse culturelle africaine tout en s'adressant à une audience mondiale. Rejoignez le mouvement Dahomey-Gang, créé par DJIVO Nolhan Marvin.F, pour porter fièrement cet héritage avec style, authenticité et passion.
               </p>
               <div className="flex items-center gap-8">
                 <div>

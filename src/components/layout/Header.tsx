@@ -36,10 +36,10 @@ export default function Header() {
     <>
       <header
         className={cn(
-          "fixed top-0 left-0 right-0 z-50 transition-all duration-300",
+          "fixed left-0 right-0 z-50 transition-all duration-300",
           isScrolled
-            ? "bg-primary/95 backdrop-blur-md shadow-lg py-3"
-            : "bg-transparent py-5"
+            ? "top-0 bg-primary/95 backdrop-blur-md shadow-lg py-3"
+            : "top-10 bg-transparent py-5"
         )}
       >
         <div className="container-custom">

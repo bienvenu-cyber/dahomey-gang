@@ -28,7 +28,6 @@ export default function ImageUpload({
       .upload(filePath, file);
 
     if (uploadError) {
-      console.error("Upload error:", uploadError);
       return null;
     }
 
@@ -58,7 +57,7 @@ export default function ImageUpload({
           onImagesChange([...images, ...validUrls]);
         }
       } catch (error) {
-        console.error("Upload failed:", error);
+        // Upload failed silently
       } finally {
         setUploading(false);
       }

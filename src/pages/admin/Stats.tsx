@@ -124,7 +124,7 @@ export default function Stats() {
         );
       }
     } catch (error) {
-      console.error("Error fetching stats:", error);
+      // Error fetching stats
     } finally {
       setLoading(false);
     }

@@ -3,6 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { lazy, Suspense } from "react";
 import { CartProvider } from "@/contexts/CartContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { CurrencyProvider } from "@/contexts/CurrencyContext";
@@ -21,17 +22,17 @@ import Checkout from "@/pages/Checkout";
 import Auth from "@/pages/Auth";
 import NotFound from "@/pages/NotFound";
 
-// Admin pages
-import AdminLayout from "@/pages/admin/AdminLayout";
-import Dashboard from "@/pages/admin/Dashboard";
-import Products from "@/pages/admin/Products";
-import Orders from "@/pages/admin/Orders";
-import Stats from "@/pages/admin/Stats";
-import Customers from "@/pages/admin/Customers";
-import Payments from "@/pages/admin/Payments";
-import Emails from "@/pages/admin/Emails";
-import Settings from "@/pages/admin/Settings";
-import PromoCodes from "@/pages/admin/PromoCodes";
+// Lazy load admin pages
+const AdminLayout = lazy(() => import("@/pages/admin/AdminLayout"));
+const Dashboard = lazy(() => import("@/pages/admin/Dashboard"));
+const Products = lazy(() => import("@/pages/admin/Products"));
+const Orders = lazy(() => import("@/pages/admin/Orders"));
+const Stats = lazy(() => import("@/pages/admin/Stats"));
+const Customers = lazy(() => import("@/pages/admin/Customers"));
+const Payments = lazy(() => import("@/pages/admin/Payments"));
+const Emails = lazy(() => import("@/pages/admin/Emails"));
+const Settings = lazy(() => import("@/pages/admin/Settings"));
+const PromoCodes = lazy(() => import("@/pages/admin/PromoCodes"));
 
 const queryClient = new QueryClient();
 
@@ -45,17 +46,24 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <Routes>
-              {/* Admin Routes (no header/footer) */}
-              <Route path="/admin" element={<AdminLayout />}>
-                <Route index element={<Dashboard />} />
-                <Route path="products" element={<Products />} />
-                <Route path="promo-codes" element={<PromoCodes />} />
-                <Route path="orders" element={<Orders />} />
-                <Route path="stats" element={<Stats />} />
-                <Route path="customers" element={<Customers />} />
-                <Route path="payments" element={<Payments />} />
-                <Route path="emails" element={<Emails />} />
-                <Route path="settings" element={<Settings />} />
+                {/* Admin Routes (lazy loaded) */}
+                <Route
+                  path="/admin"
+                  element={
+                    <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Chargement...</div>}>
+                      <AdminLayout />
+                    </Suspense>
+                  }
+                >
+                  <Route index element={<Suspense fallback={<div>Chargement...</div>}><Dashboard /></Suspense>} />
+                  <Route path="products" element={<Suspense fallback={<div>Chargement...</div>}><Products /></Suspense>} />
+                  <Route path="promo-codes" element={<Suspense fallback={<div>Chargement...</div>}><PromoCodes /></Suspense>} />
+                  <Route path="orders" element={<Suspense fallback={<div>Chargement...</div>}><Orders /></Suspense>} />
+                  <Route path="stats" element={<Suspense fallback={<div>Chargement...</div>}><Stats /></Suspense>} />
+                  <Route path="customers" element={<Suspense fallback={<div>Chargement...</div>}><Customers /></Suspense>} />
+                  <Route path="payments" element={<Suspense fallback={<div>Chargement...</div>}><Payments /></Suspense>} />
+                  <Route path="emails" element={<Suspense fallback={<div>Chargement...</div>}><Emails /></Suspense>} />
+                  <Route path="settings" element={<Suspense fallback={<div>Chargement...</div>}><Settings /></Suspense>} />
               </Route>
 
               {/* Public Routes (with header/footer) */}

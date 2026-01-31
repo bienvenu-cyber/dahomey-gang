@@ -79,7 +79,6 @@ export default function PromoCodes() {
       if (error) throw error;
       setPromoCodes(data || []);
     } catch (error) {
-      console.error("Error fetching promo codes:", error);
       toast({
         title: "Erreur",
         description: "Impossible de charger les codes promo",
@@ -125,7 +124,6 @@ export default function PromoCodes() {
       setFormData(defaultPromoCode);
       fetchPromoCodes();
     } catch (error: any) {
-      console.error("Error saving promo code:", error);
       toast({
         title: "Erreur",
         description: error.message || "Impossible de sauvegarder le code promo",

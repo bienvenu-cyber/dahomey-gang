@@ -24,7 +24,7 @@ export default function PromoBanner() {
   const currentMessage = promoMessages[currentIndex];
 
   return (
-    <div className="bg-primary text-white py-2 px-4 relative z-[60]">
+    <div className="bg-primary text-white py-2 px-4 fixed top-0 left-0 right-0 z-[60]">
       <div className="container-custom flex items-center justify-center gap-2">
         <currentMessage.icon className="w-4 h-4 text-secondary flex-shrink-0" />
         <p className="text-sm font-medium text-center">

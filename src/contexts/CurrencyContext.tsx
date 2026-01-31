@@ -70,7 +70,6 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
           localStorage.setItem(CURRENCY_STORAGE_KEY, "EUR");
         }
       } catch (error) {
-        console.log("Géolocalisation échouée, utilisation de l'EUR par défaut");
         setCurrencyState("EUR");
       } finally {
         setIsDetected(true);
