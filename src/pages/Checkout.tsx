@@ -1,24 +1,26 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ChevronLeft, CreditCard, Truck, Check, Tag, X } from "lucide-react";
+import { ChevronLeft, CreditCard, Truck, Check, Tag, X, Loader2 } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { useShippingSettings } from "@/hooks/useProducts";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 
+// African countries where address is optional
+const africanCountries = ["Bénin", "Togo", "Côte d'Ivoire", "Sénégal", "Mali", "Burkina Faso", "Niger", "Cameroun", "Gabon"];
+
 interface FormData {
   email: string;
-  firstName: string;
-  lastName: string;
+  fullName: string;
   address: string;
-  addressComplement: string;
   city: string;
   postalCode: string;
   country: string;
   phone: string;
-  deliveryMethod: "standard" | "express";
-  paymentMethod: "card" | "paypal";
+  deliveryMethod: string;
+  paymentMethod: "card" | "paypal" | "cash_on_delivery";
   cardNumber: string;
   cardExpiry: string;
   cardCvc: string;
@@ -27,15 +29,13 @@ interface FormData {
 
 const initialFormData: FormData = {
   email: "",
-  firstName: "",
-  lastName: "",
+  fullName: "",
   address: "",
-  addressComplement: "",
   city: "",
   postalCode: "",
   country: "Bénin",
   phone: "",
-  deliveryMethod: "standard",
+  deliveryMethod: "",
   paymentMethod: "card",
   cardNumber: "",
   cardExpiry: "",
@@ -48,6 +48,7 @@ export default function Checkout() {
   const { formatPrice, currency } = useCurrency();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { data: shippingOptions = [], isLoading: shippingLoading } = useShippingSettings();
   
   const [formData, setFormData] = useState<FormData>(initialFormData);
   const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
@@ -64,6 +65,15 @@ export default function Checkout() {
   } | null>(null);
   const [promoError, setPromoError] = useState("");
 
+  // Set default shipping method when options load
+  useEffect(() => {
+    if (shippingOptions.length > 0 && !formData.deliveryMethod) {
+      setFormData(prev => ({ ...prev, deliveryMethod: shippingOptions[0].id }));
+    }
+  }, [shippingOptions, formData.deliveryMethod]);
+
+  const isAfrican = africanCountries.includes(formData.country);
+
   if (items.length === 0) {
     return (
       <main className="pt-24 pb-20 min-h-screen bg-background">
@@ -79,6 +89,9 @@ export default function Checkout() {
     );
   }
 
+  // Get selected shipping option
+  const selectedShipping = shippingOptions.find(s => s.id === formData.deliveryMethod);
+  
   // Calculate discount
   const calculateDiscount = () => {
     if (!appliedPromo) return 0;
@@ -92,7 +105,17 @@ export default function Checkout() {
 
   const discount = calculateDiscount();
   const subtotalAfterDiscount = totalPrice - discount;
-  const shipping = formData.deliveryMethod === "express" ? 12.90 : subtotalAfterDiscount >= 100 ? 0 : 5.90;
+  
+  // Calculate shipping based on admin settings
+  const getShippingCost = () => {
+    if (!selectedShipping) return 0;
+    if (selectedShipping.free_threshold && subtotalAfterDiscount >= selectedShipping.free_threshold) {
+      return 0;
+    }
+    return selectedShipping.price;
+  };
+  
+  const shipping = getShippingCost();
   const finalTotal = subtotalAfterDiscount + shipping;
 
   const applyPromoCode = async () => {
@@ -127,7 +150,7 @@ export default function Checkout() {
       }
       
       // Check max uses
-      if (data.max_uses && data.current_uses >= data.max_uses) {
+      if (data.max_uses && data.current_uses && data.current_uses >= data.max_uses) {
         setPromoError("Ce code promo a atteint sa limite d'utilisation");
         return;
       }
@@ -172,12 +195,14 @@ export default function Checkout() {
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = "Email invalide";
     }
-    if (!formData.firstName) newErrors.firstName = "Prénom requis";
-    if (!formData.lastName) newErrors.lastName = "Nom requis";
-    if (!formData.address) newErrors.address = "Adresse requise";
+    if (!formData.fullName) newErrors.fullName = "Nom complet requis";
     if (!formData.city) newErrors.city = "Ville requise";
-    if (!formData.postalCode) newErrors.postalCode = "Code postal requis";
     if (!formData.phone) newErrors.phone = "Téléphone requis";
+    
+    // Address is optional in Africa
+    if (!isAfrican && !formData.address) {
+      newErrors.address = "Adresse requise";
+    }
     
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -310,48 +335,71 @@ export default function Checkout() {
                       )}
                     </div>
 
+                    <div>
+                      <label className="text-sm font-medium text-primary mb-1.5 block">
+                        Nom complet *
+                      </label>
+                      <input
+                        type="text"
+                        name="fullName"
+                        value={formData.fullName}
+                        onChange={handleChange}
+                        className={cn(
+                          "w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary/50",
+                          errors.fullName ? "border-accent" : "border-border"
+                        )}
+                        placeholder="Jean Dupont"
+                      />
+                      {errors.fullName && (
+                        <p className="text-accent text-sm mt-1">{errors.fullName}</p>
+                      )}
+                    </div>
+
                     <div className="grid sm:grid-cols-2 gap-4">
                       <div>
                         <label className="text-sm font-medium text-primary mb-1.5 block">
-                          Prénom *
+                          Pays *
                         </label>
-                        <input
-                          type="text"
-                          name="firstName"
-                          value={formData.firstName}
+                        <select
+                          name="country"
+                          value={formData.country}
                           onChange={handleChange}
-                          className={cn(
-                            "w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary/50",
-                            errors.firstName ? "border-accent" : "border-border"
-                          )}
-                        />
-                        {errors.firstName && (
-                          <p className="text-accent text-sm mt-1">{errors.firstName}</p>
-                        )}
+                          className="w-full px-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary/50"
+                        >
+                          <option>Bénin</option>
+                          <option>France</option>
+                          <option>Togo</option>
+                          <option>Côte d'Ivoire</option>
+                          <option>Sénégal</option>
+                          <option>Mali</option>
+                          <option>Burkina Faso</option>
+                          <option>Cameroun</option>
+                        </select>
                       </div>
                       <div>
                         <label className="text-sm font-medium text-primary mb-1.5 block">
-                          Nom *
+                          Téléphone *
                         </label>
                         <input
-                          type="text"
-                          name="lastName"
-                          value={formData.lastName}
+                          type="tel"
+                          name="phone"
+                          value={formData.phone}
                           onChange={handleChange}
                           className={cn(
                             "w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary/50",
-                            errors.lastName ? "border-accent" : "border-border"
+                            errors.phone ? "border-accent" : "border-border"
                           )}
+                          placeholder="+229 XX XX XX XX"
                         />
-                        {errors.lastName && (
-                          <p className="text-accent text-sm mt-1">{errors.lastName}</p>
+                        {errors.phone && (
+                          <p className="text-accent text-sm mt-1">{errors.phone}</p>
                         )}
                       </div>
                     </div>
 
                     <div>
                       <label className="text-sm font-medium text-primary mb-1.5 block">
-                        Adresse *
+                        Adresse {isAfrican ? "(optionnel)" : "*"}
                       </label>
                       <input
                         type="text"
@@ -367,20 +415,6 @@ export default function Checkout() {
                       {errors.address && (
                         <p className="text-accent text-sm mt-1">{errors.address}</p>
                       )}
-                    </div>
-
-                    <div>
-                      <label className="text-sm font-medium text-primary mb-1.5 block">
-                        Complément d'adresse
-                      </label>
-                      <input
-                        type="text"
-                        name="addressComplement"
-                        value={formData.addressComplement}
-                        onChange={handleChange}
-                        className="w-full px-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary/50"
-                        placeholder="Appartement, étage, etc."
-                      />
                     </div>
 
                     <div className="grid sm:grid-cols-2 gap-4">
@@ -404,60 +438,15 @@ export default function Checkout() {
                       </div>
                       <div>
                         <label className="text-sm font-medium text-primary mb-1.5 block">
-                          Code postal *
+                          Code postal (optionnel)
                         </label>
                         <input
                           type="text"
                           name="postalCode"
                           value={formData.postalCode}
                           onChange={handleChange}
-                          className={cn(
-                            "w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary/50",
-                            errors.postalCode ? "border-accent" : "border-border"
-                          )}
-                        />
-                        {errors.postalCode && (
-                          <p className="text-accent text-sm mt-1">{errors.postalCode}</p>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="grid sm:grid-cols-2 gap-4">
-                      <div>
-                        <label className="text-sm font-medium text-primary mb-1.5 block">
-                          Pays *
-                        </label>
-                        <select
-                          name="country"
-                          value={formData.country}
-                          onChange={handleChange}
                           className="w-full px-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary/50"
-                        >
-                          <option>Bénin</option>
-                          <option>France</option>
-                          <option>Togo</option>
-                          <option>Côte d'Ivoire</option>
-                          <option>Sénégal</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium text-primary mb-1.5 block">
-                          Téléphone *
-                        </label>
-                        <input
-                          type="tel"
-                          name="phone"
-                          value={formData.phone}
-                          onChange={handleChange}
-                          className={cn(
-                            "w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary/50",
-                            errors.phone ? "border-accent" : "border-border"
-                          )}
-                          placeholder="+229 XX XX XX XX"
                         />
-                        {errors.phone && (
-                          <p className="text-accent text-sm mt-1">{errors.phone}</p>
-                        )}
                       </div>
                     </div>
                   </div>
@@ -479,81 +468,62 @@ export default function Checkout() {
                     Mode de livraison
                   </h2>
 
-                  <div className="space-y-4">
-                    <label
-                      className={cn(
-                        "flex items-center gap-4 p-4 border rounded-lg cursor-pointer transition-colors",
-                        formData.deliveryMethod === "standard"
-                          ? "border-secondary bg-secondary/5"
-                          : "border-border hover:border-primary"
-                      )}
-                    >
-                      <input
-                        type="radio"
-                        name="deliveryMethod"
-                        value="standard"
-                        checked={formData.deliveryMethod === "standard"}
-                        onChange={handleChange}
-                        className="sr-only"
-                      />
-                      <div
-                        className={cn(
-                          "w-5 h-5 rounded-full border-2 flex items-center justify-center",
-                          formData.deliveryMethod === "standard"
-                            ? "border-secondary"
-                            : "border-muted-foreground"
-                        )}
-                      >
-                        {formData.deliveryMethod === "standard" && (
-                          <div className="w-2.5 h-2.5 rounded-full bg-secondary" />
-                        )}
-                      </div>
-                      <Truck className="w-6 h-6 text-muted-foreground" />
-                      <div className="flex-1">
-                        <p className="font-medium">Livraison Standard</p>
-                        <p className="text-sm text-muted-foreground">5-7 jours ouvrés</p>
-                      </div>
-                      <span className="font-bold">
-                        {subtotalAfterDiscount >= 100 ? "Gratuit" : formatPrice(5.90)}
-                      </span>
-                    </label>
-
-                    <label
-                      className={cn(
-                        "flex items-center gap-4 p-4 border rounded-lg cursor-pointer transition-colors",
-                        formData.deliveryMethod === "express"
-                          ? "border-secondary bg-secondary/5"
-                          : "border-border hover:border-primary"
-                      )}
-                    >
-                      <input
-                        type="radio"
-                        name="deliveryMethod"
-                        value="express"
-                        checked={formData.deliveryMethod === "express"}
-                        onChange={handleChange}
-                        className="sr-only"
-                      />
-                      <div
-                        className={cn(
-                          "w-5 h-5 rounded-full border-2 flex items-center justify-center",
-                          formData.deliveryMethod === "express"
-                            ? "border-secondary"
-                            : "border-muted-foreground"
-                        )}
-                      >
-                        {formData.deliveryMethod === "express" && (
-                          <div className="w-2.5 h-2.5 rounded-full bg-secondary" />
-                        )}
-                      </div>
-                      <Truck className="w-6 h-6 text-secondary" />
-                      <div className="flex-1">
-                        <p className="font-medium">Livraison Express</p>
-                        <p className="text-sm text-muted-foreground">2-3 jours ouvrés</p>
-                      </div>
-                      <span className="font-bold">{formatPrice(12.90)}</span>
-                    </label>
-                  </div>
+                  {shippingLoading ? (
+                    <div className="flex items-center justify-center py-8">
+                      <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {shippingOptions.map((option) => {
+                        const isFree = option.free_threshold && subtotalAfterDiscount >= option.free_threshold;
+                        return (
+                          <label
+                            key={option.id}
+                            className={cn(
+                              "flex items-center gap-4 p-4 border rounded-lg cursor-pointer transition-colors",
+                              formData.deliveryMethod === option.id
+                                ? "border-secondary bg-secondary/5"
+                                : "border-border hover:border-primary"
+                            )}
+                          >
+                            <input
+                              type="radio"
+                              name="deliveryMethod"
+                              value={option.id}
+                              checked={formData.deliveryMethod === option.id}
+                              onChange={handleChange}
+                              className="sr-only"
+                            />
+                            <div
+                              className={cn(
+                                "w-5 h-5 rounded-full border-2 flex items-center justify-center",
+                                formData.deliveryMethod === option.id
+                                  ? "border-secondary"
+                                  : "border-muted-foreground"
+                              )}
+                            >
+                              {formData.deliveryMethod === option.id && (
+                                <div className="w-2.5 h-2.5 rounded-full bg-secondary" />
+                              )}
+                            </div>
+                            <Truck className={cn(
+                              "w-6 h-6",
+                              formData.deliveryMethod === option.id ? "text-secondary" : "text-muted-foreground"
+                            )} />
+                            <div className="flex-1">
+                              <p className="font-medium">{option.name}</p>
+                              <p className="text-sm text-muted-foreground">
+                                {option.delivery_days_min}-{option.delivery_days_max} jours ouvrés
+                              </p>
+                            </div>
+                            <span className="font-bold">
+                              {isFree ? "Gratuit" : formatPrice(option.price)}
+                            </span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  )}
 
                   <div className="flex gap-4 mt-8">
                     <button
@@ -610,44 +580,57 @@ export default function Checkout() {
                           <div className="w-2.5 h-2.5 rounded-full bg-secondary" />
                         )}
                       </div>
-                      <CreditCard className="w-6 h-6" />
-                      <span className="font-medium">Carte bancaire</span>
+                      <CreditCard className="w-6 h-6 text-muted-foreground" />
+                      <div className="flex-1">
+                        <p className="font-medium">Carte bancaire</p>
+                        <p className="text-sm text-muted-foreground">
+                          Visa, Mastercard, etc.
+                        </p>
+                      </div>
                     </label>
 
-                    <label
-                      className={cn(
-                        "flex items-center gap-4 p-4 border rounded-lg cursor-pointer transition-colors",
-                        formData.paymentMethod === "paypal"
-                          ? "border-secondary bg-secondary/5"
-                          : "border-border hover:border-primary"
-                      )}
-                    >
-                      <input
-                        type="radio"
-                        name="paymentMethod"
-                        value="paypal"
-                        checked={formData.paymentMethod === "paypal"}
-                        onChange={handleChange}
-                        className="sr-only"
-                      />
-                      <div
+                    {isAfrican && (
+                      <label
                         className={cn(
-                          "w-5 h-5 rounded-full border-2 flex items-center justify-center",
-                          formData.paymentMethod === "paypal"
-                            ? "border-secondary"
-                            : "border-muted-foreground"
+                          "flex items-center gap-4 p-4 border rounded-lg cursor-pointer transition-colors",
+                          formData.paymentMethod === "cash_on_delivery"
+                            ? "border-secondary bg-secondary/5"
+                            : "border-border hover:border-primary"
                         )}
                       >
-                        {formData.paymentMethod === "paypal" && (
-                          <div className="w-2.5 h-2.5 rounded-full bg-secondary" />
-                        )}
-                      </div>
-                      <span className="text-xl font-bold text-highlight">PayPal</span>
-                    </label>
+                        <input
+                          type="radio"
+                          name="paymentMethod"
+                          value="cash_on_delivery"
+                          checked={formData.paymentMethod === "cash_on_delivery"}
+                          onChange={handleChange}
+                          className="sr-only"
+                        />
+                        <div
+                          className={cn(
+                            "w-5 h-5 rounded-full border-2 flex items-center justify-center",
+                            formData.paymentMethod === "cash_on_delivery"
+                              ? "border-secondary"
+                              : "border-muted-foreground"
+                          )}
+                        >
+                          {formData.paymentMethod === "cash_on_delivery" && (
+                            <div className="w-2.5 h-2.5 rounded-full bg-secondary" />
+                          )}
+                        </div>
+                        <Truck className="w-6 h-6 text-muted-foreground" />
+                        <div className="flex-1">
+                          <p className="font-medium">Paiement à la livraison</p>
+                          <p className="text-sm text-muted-foreground">
+                            Payez en espèces à la réception
+                          </p>
+                        </div>
+                      </label>
+                    )}
                   </div>
 
                   {formData.paymentMethod === "card" && (
-                    <div className="space-y-4 mb-6">
+                    <div className="space-y-4 p-4 bg-muted rounded-lg">
                       <div>
                         <label className="text-sm font-medium text-primary mb-1.5 block">
                           Numéro de carte *
@@ -658,7 +641,7 @@ export default function Checkout() {
                           value={formData.cardNumber}
                           onChange={handleChange}
                           className={cn(
-                            "w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary/50",
+                            "w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary/50 bg-white",
                             errors.cardNumber ? "border-accent" : "border-border"
                           )}
                           placeholder="1234 5678 9012 3456"
@@ -667,7 +650,6 @@ export default function Checkout() {
                           <p className="text-accent text-sm mt-1">{errors.cardNumber}</p>
                         )}
                       </div>
-
                       <div className="grid grid-cols-2 gap-4">
                         <div>
                           <label className="text-sm font-medium text-primary mb-1.5 block">
@@ -679,7 +661,7 @@ export default function Checkout() {
                             value={formData.cardExpiry}
                             onChange={handleChange}
                             className={cn(
-                              "w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary/50",
+                              "w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary/50 bg-white",
                               errors.cardExpiry ? "border-accent" : "border-border"
                             )}
                             placeholder="MM/AA"
@@ -698,7 +680,7 @@ export default function Checkout() {
                             value={formData.cardCvc}
                             onChange={handleChange}
                             className={cn(
-                              "w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary/50",
+                              "w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary/50 bg-white",
                               errors.cardCvc ? "border-accent" : "border-border"
                             )}
                             placeholder="123"
@@ -722,9 +704,16 @@ export default function Checkout() {
                     <button
                       type="submit"
                       disabled={isSubmitting}
-                      className="btn-secondary flex-1"
+                      className="btn-secondary flex-1 flex items-center justify-center gap-2"
                     >
-                      {isSubmitting ? "Traitement..." : `Payer ${formatPrice(finalTotal)}`}
+                      {isSubmitting ? (
+                        <>
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                          Traitement...
+                        </>
+                      ) : (
+                        `Payer ${formatPrice(finalTotal)}`
+                      )}
                     </button>
                   </div>
                 </div>
@@ -734,97 +723,77 @@ export default function Checkout() {
 
           {/* Order Summary */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-xl p-6 shadow-sm sticky top-28">
-              <h2 className="font-montserrat text-lg font-bold text-primary mb-6">
-                Votre commande
-              </h2>
+            <div className="bg-white rounded-xl p-6 shadow-sm sticky top-24">
+              <h3 className="font-montserrat text-lg font-bold text-primary mb-4">
+                Récapitulatif
+              </h3>
 
+              {/* Items */}
               <div className="space-y-4 mb-6">
-                {items.map((item) => (
-                  <div
-                    key={`${item.product.id}-${item.size}-${item.color}`}
-                    className="flex gap-3"
-                  >
-                    <div className="relative w-16 h-16 flex-shrink-0">
+                {items.map((item, index) => (
+                  <div key={index} className="flex gap-3">
+                    <div className="w-16 h-16 rounded-lg overflow-hidden bg-muted flex-shrink-0">
                       <img
                         src={item.product.images[0]}
                         alt={item.product.name}
-                        className="w-full h-full object-cover rounded-lg"
+                        className="w-full h-full object-cover"
                       />
-                      <span className="absolute -top-2 -right-2 w-5 h-5 bg-primary text-white text-xs rounded-full flex items-center justify-center">
-                        {item.quantity}
-                      </span>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm line-clamp-1">
+                      <p className="font-medium text-sm truncate">
                         {item.product.name}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {item.size} / {item.color}
+                        {item.size} • {item.color} • x{item.quantity}
                       </p>
                     </div>
-                    <span className="font-medium text-sm">
+                    <p className="font-medium text-sm">
                       {formatPrice(item.product.price * item.quantity)}
-                    </span>
+                    </p>
                   </div>
                 ))}
               </div>
 
-              {/* Promo Code Section */}
-              <div className="border-t border-border pt-4 mb-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <Tag className="w-4 h-4 text-muted-foreground" />
-                  <span className="text-sm font-medium">Code promo</span>
-                </div>
-                
+              {/* Promo Code */}
+              <div className="border-t pt-4 mb-4">
                 {appliedPromo ? (
-                  <div className="flex items-center justify-between bg-secondary/10 rounded-lg p-3">
-                    <div>
-                      <span className="font-mono font-bold text-secondary">
-                        {appliedPromo.code}
-                      </span>
-                      <p className="text-xs text-muted-foreground">
-                        {appliedPromo.discount_type === "percentage"
-                          ? `-${appliedPromo.discount_value}%`
-                          : `-${formatPrice(appliedPromo.discount_value)}`}
-                      </p>
+                  <div className="flex items-center justify-between bg-secondary/10 p-3 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <Tag className="w-4 h-4 text-secondary" />
+                      <span className="font-medium text-sm">{appliedPromo.code}</span>
                     </div>
                     <button
                       onClick={removePromoCode}
-                      className="text-muted-foreground hover:text-destructive transition-colors"
+                      className="text-muted-foreground hover:text-accent"
                     >
                       <X className="w-4 h-4" />
                     </button>
                   </div>
                 ) : (
-                  <div className="space-y-2">
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        value={promoCode}
-                        onChange={(e) => {
-                          setPromoCode(e.target.value);
-                          setPromoError("");
-                        }}
-                        placeholder="Entrer le code"
-                        className="flex-1 px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-secondary/50"
-                      />
-                      <button
-                        onClick={applyPromoCode}
-                        disabled={promoLoading || !promoCode.trim()}
-                        className="px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary/90 disabled:opacity-50 transition-colors"
-                      >
-                        {promoLoading ? "..." : "Appliquer"}
-                      </button>
-                    </div>
-                    {promoError && (
-                      <p className="text-xs text-accent">{promoError}</p>
-                    )}
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={promoCode}
+                      onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                      placeholder="Code promo"
+                      className="flex-1 px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-secondary/50"
+                    />
+                    <button
+                      onClick={applyPromoCode}
+                      disabled={promoLoading || !promoCode}
+                      className="px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium disabled:opacity-50"
+                    >
+                      {promoLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Appliquer"}
+                    </button>
                   </div>
+                )}
+                {promoError && (
+                  <p className="text-accent text-xs mt-2">{promoError}</p>
                 )}
               </div>
 
-              <div className="border-t border-border pt-4 space-y-3">
+              {/* Totals */}
+              <div className="border-t pt-4 space-y-2">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Sous-total</span>
                   <span>{formatPrice(totalPrice)}</span>
@@ -839,14 +808,9 @@ export default function Checkout() {
                   <span className="text-muted-foreground">Livraison</span>
                   <span>{shipping === 0 ? "Gratuit" : formatPrice(shipping)}</span>
                 </div>
-              </div>
-
-              <div className="border-t border-border mt-4 pt-4">
-                <div className="flex justify-between text-lg">
-                  <span className="font-semibold">Total</span>
-                  <span className="font-montserrat font-bold text-primary">
-                    {formatPrice(finalTotal)}
-                  </span>
+                <div className="flex justify-between font-bold text-lg pt-2 border-t">
+                  <span>Total</span>
+                  <span className="text-primary">{formatPrice(finalTotal)}</span>
                 </div>
               </div>
             </div>

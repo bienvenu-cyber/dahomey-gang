@@ -316,6 +316,48 @@ export type Database = {
         }
         Relationships: []
       }
+      shipping_settings: {
+        Row: {
+          created_at: string
+          delivery_days_max: number
+          delivery_days_min: number
+          description: string | null
+          free_threshold: number | null
+          id: string
+          is_active: boolean
+          name: string
+          price: number
+          regions: string[] | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          delivery_days_max?: number
+          delivery_days_min?: number
+          description?: string | null
+          free_threshold?: number | null
+          id?: string
+          is_active?: boolean
+          name: string
+          price?: number
+          regions?: string[] | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          delivery_days_max?: number
+          delivery_days_min?: number
+          description?: string | null
+          free_threshold?: number | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          price?: number
+          regions?: string[] | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string

@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Search, Filter, X, ChevronDown, Grid, LayoutGrid } from "lucide-react";
-import { products, categories } from "@/data/products";
+import { Search, Filter, X, ChevronDown, Grid, LayoutGrid, Loader2 } from "lucide-react";
+import { useProducts, useCategories } from "@/hooks/useProducts";
 import ProductCard from "@/components/products/ProductCard";
 import { cn } from "@/lib/utils";
 
@@ -25,6 +25,9 @@ export default function Shop() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [gridCols, setGridCols] = useState<2 | 3>(3);
+
+  const { data: products = [], isLoading } = useProducts();
+  const { data: categories = [] } = useCategories();
 
   // Get filter values from URL
   const categoryFilter = searchParams.get("category") || "";
@@ -98,7 +101,7 @@ export default function Shop() {
     }
 
     return filtered;
-  }, [categoryFilter, priceFilter, sortBy, searchQuery, featured]);
+  }, [products, categoryFilter, priceFilter, sortBy, searchQuery, featured]);
 
   const activeFiltersCount = [categoryFilter, priceFilter, featured].filter(Boolean).length;
 
@@ -315,7 +318,11 @@ export default function Shop() {
         )}
 
         {/* Products Grid */}
-        {filteredProducts.length > 0 ? (
+        {isLoading ? (
+          <div className="flex items-center justify-center py-20">
+            <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+          </div>
+        ) : filteredProducts.length > 0 ? (
           <div
             className={cn(
               "grid gap-4 md:gap-6",
