@@ -1,10 +1,12 @@
 import { X, Plus, Minus, Trash2, ShoppingBag } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useCart } from "@/contexts/CartContext";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { cn } from "@/lib/utils";
 
 export default function CartSidebar() {
   const { items, isOpen, closeCart, updateQuantity, removeItem, totalPrice } = useCart();
+  const { formatPrice } = useCurrency();
 
   return (
     <>
@@ -72,7 +74,7 @@ export default function CartSidebar() {
                       {item.size} / {item.color}
                     </p>
                     <p className="font-bold text-primary mt-1">
-                      {item.product.price} €
+                      {formatPrice(item.product.price)}
                     </p>
                   </div>
                   <div className="flex flex-col items-end justify-between">
@@ -129,7 +131,7 @@ export default function CartSidebar() {
             <div className="flex items-center justify-between text-lg">
               <span className="font-medium">Total</span>
               <span className="font-montserrat font-bold text-primary">
-                {totalPrice.toFixed(2)} €
+                {formatPrice(totalPrice)}
               </span>
             </div>
             <div className="space-y-3">

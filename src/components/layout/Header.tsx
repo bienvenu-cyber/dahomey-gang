@@ -3,6 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { Menu, X, ShoppingBag, User, Search } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import { cn } from "@/lib/utils";
+import CurrencySelector from "@/components/CurrencySelector";
 
 const navLinks = [
   { name: "Accueil", path: "/" },
@@ -67,7 +68,9 @@ export default function Header() {
           </nav>
 
           {/* Actions */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4">
+            <CurrencySelector />
+            
             <button
               className="p-2 text-white/80 hover:text-secondary transition-colors"
               aria-label="Rechercher"

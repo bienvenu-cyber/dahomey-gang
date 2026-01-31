@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Instagram, Facebook, Twitter, Mail, MapPin, Phone } from "lucide-react";
+import { Instagram, Facebook, Twitter, Mail, MapPin, Phone, ExternalLink } from "lucide-react";
 
 const footerLinks = {
   shop: [
@@ -18,6 +18,9 @@ const footerLinks = {
     { name: "CGV", path: "/terms" },
     { name: "Confidentialité", path: "/privacy" },
     { name: "Cookies", path: "/cookies" },
+  ],
+  partners: [
+    { name: "KamexTrading", href: "https://kamextrading.com", description: "Trading & Investissement" },
   ],
 };
 
@@ -58,7 +61,7 @@ export default function Footer() {
 
       {/* Main Footer */}
       <div className="container-custom py-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-8">
           {/* Brand */}
           <div className="lg:col-span-2">
             <Link to="/" className="font-montserrat text-2xl font-bold text-secondary inline-block mb-4">
@@ -118,6 +121,49 @@ export default function Footer() {
             </ul>
           </div>
 
+          {/* Partners */}
+          <div>
+            <h4 className="font-montserrat font-bold text-secondary mb-4">Partenaires</h4>
+            <ul className="space-y-3">
+              {footerLinks.partners.map((partner) => (
+                <li key={partner.href}>
+                  <a
+                    href={partner.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-white/70 hover:text-secondary text-sm transition-colors flex items-center gap-1"
+                  >
+                    {partner.name}
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                  <p className="text-white/50 text-xs mt-1">{partner.description}</p>
+                </li>
+              ))}
+              <li className="mt-4">
+                <a
+                  href="https://kamextrading.com/formations"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-secondary hover:text-secondary/80 text-sm transition-colors flex items-center gap-1"
+                >
+                  Formations Trading
+                  <ExternalLink className="w-3 h-3" />
+                </a>
+              </li>
+              <li>
+                <a
+                  href="https://kamextrading.com/signaux"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-white/70 hover:text-secondary text-sm transition-colors flex items-center gap-1"
+                >
+                  Signaux Crypto
+                  <ExternalLink className="w-3 h-3" />
+                </a>
+              </li>
+            </ul>
+          </div>
+
           {/* Contact */}
           <div>
             <h4 className="font-montserrat font-bold text-secondary mb-4">Contact</h4>
@@ -135,6 +181,24 @@ export default function Footer() {
                 Cotonou, Bénin
               </li>
             </ul>
+          </div>
+        </div>
+      </div>
+
+      {/* Partner Banner */}
+      <div className="border-t border-white/10 bg-white/5">
+        <div className="container-custom py-4">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-2 text-center">
+            <span className="text-white/60 text-sm">Apprenez à investir avec notre partenaire</span>
+            <a
+              href="https://kamextrading.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-secondary hover:text-secondary/80 font-semibold text-sm flex items-center gap-1 transition-colors"
+            >
+              KamexTrading.com
+              <ExternalLink className="w-3 h-3" />
+            </a>
           </div>
         </div>
       </div>

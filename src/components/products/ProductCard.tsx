@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Heart, ShoppingBag, Star } from "lucide-react";
 import { Product } from "@/types/product";
 import { useCart } from "@/contexts/CartContext";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { cn } from "@/lib/utils";
 
 interface ProductCardProps {
@@ -14,6 +15,7 @@ export default function ProductCard({ product }: ProductCardProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
   const { addItem } = useCart();
+  const { formatPrice } = useCurrency();
 
   const handleQuickAdd = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -132,13 +134,13 @@ export default function ProductCard({ product }: ProductCardProps) {
           {product.name}
         </h3>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <span className="font-montserrat font-bold text-lg text-primary">
-            {product.price} €
+            {formatPrice(product.price)}
           </span>
           {product.originalPrice && (
             <span className="text-muted-foreground line-through text-sm">
-              {product.originalPrice} €
+              {formatPrice(product.originalPrice)}
             </span>
           )}
         </div>
