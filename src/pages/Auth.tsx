@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Eye, EyeOff, Mail, Lock, User } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
@@ -10,6 +11,7 @@ export default function Auth() {
   const [mode, setMode] = useState<AuthMode>("login");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const { signIn, signUp, user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -20,6 +22,12 @@ export default function Auth() {
     lastName: "",
     confirmPassword: "",
   });
+
+  useEffect(() => {
+    if (user) {
+      navigate("/");
+    }
+  }, [user, navigate]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData((prev) => ({
@@ -32,28 +40,59 @@ export default function Auth() {
     e.preventDefault();
     setIsLoading(true);
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+    try {
+      if (mode === "register") {
+        if (formData.password !== formData.confirmPassword) {
+          toast({
+            title: "Erreur",
+            description: "Les mots de passe ne correspondent pas",
+            variant: "destructive",
+          });
+          setIsLoading(false);
+          return;
+        }
 
-    if (mode === "register" && formData.password !== formData.confirmPassword) {
+        const fullName = `${formData.firstName} ${formData.lastName}`.trim();
+        const { error } = await signUp(formData.email, formData.password, fullName);
+        
+        if (error) {
+          toast({
+            title: "Erreur d'inscription",
+            description: error.message,
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Compte créé",
+            description: "Vérifiez votre email pour confirmer votre compte",
+          });
+        }
+      } else {
+        const { error } = await signIn(formData.email, formData.password);
+        
+        if (error) {
+          toast({
+            title: "Erreur de connexion",
+            description: error.message,
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Connexion réussie",
+            description: "Bienvenue sur Dahomey-Gang !",
+          });
+          navigate("/");
+        }
+      }
+    } catch (error: any) {
       toast({
         title: "Erreur",
-        description: "Les mots de passe ne correspondent pas",
+        description: error.message,
         variant: "destructive",
       });
+    } finally {
       setIsLoading(false);
-      return;
     }
-
-    toast({
-      title: mode === "login" ? "Connexion réussie" : "Compte créé",
-      description: mode === "login" 
-        ? "Bienvenue sur Dahomey-Gang !" 
-        : "Votre compte a été créé avec succès",
-    });
-
-    setIsLoading(false);
-    navigate("/");
   };
 
   return (
@@ -69,7 +108,7 @@ export default function Auth() {
             </p>
           </div>
 
-          <div className="bg-white rounded-xl p-8 shadow-sm">
+          <div className="bg-card rounded-xl p-8 shadow-sm">
             {/* Tabs */}
             <div className="flex mb-8 border-b border-border">
               <button
@@ -117,7 +156,7 @@ export default function Auth() {
                         value={formData.firstName}
                         onChange={handleChange}
                         required
-                        className="w-full pl-10 pr-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary/50"
+                        className="w-full pl-10 pr-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary/50 bg-background"
                       />
                     </div>
                   </div>
@@ -133,7 +172,7 @@ export default function Auth() {
                         value={formData.lastName}
                         onChange={handleChange}
                         required
-                        className="w-full pl-10 pr-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary/50"
+                        className="w-full pl-10 pr-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary/50 bg-background"
                       />
                     </div>
                   </div>
@@ -152,7 +191,7 @@ export default function Auth() {
                     value={formData.email}
                     onChange={handleChange}
                     required
-                    className="w-full pl-10 pr-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary/50"
+                    className="w-full pl-10 pr-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary/50 bg-background"
                     placeholder="votre@email.com"
                   />
                 </div>
@@ -170,7 +209,8 @@ export default function Auth() {
                     value={formData.password}
                     onChange={handleChange}
                     required
-                    className="w-full pl-10 pr-12 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary/50"
+                    minLength={6}
+                    className="w-full pl-10 pr-12 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary/50 bg-background"
                     placeholder="••••••••"
                   />
                   <button
@@ -200,7 +240,8 @@ export default function Auth() {
                       value={formData.confirmPassword}
                       onChange={handleChange}
                       required
-                      className="w-full pl-10 pr-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary/50"
+                      minLength={6}
+                      className="w-full pl-10 pr-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary/50 bg-background"
                       placeholder="••••••••"
                     />
                   </div>
@@ -238,7 +279,7 @@ export default function Auth() {
                   <div className="w-full border-t border-border" />
                 </div>
                 <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-white text-muted-foreground">
+                  <span className="px-2 bg-card text-muted-foreground">
                     ou continuer avec
                   </span>
                 </div>

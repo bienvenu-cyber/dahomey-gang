@@ -1,9 +1,10 @@
 import { Link } from "react-router-dom";
 import { ArrowRight, Truck, Shield, RefreshCw, Star } from "lucide-react";
 import heroBg from "@/assets/hero-bg.jpg";
-import { categories } from "@/data/products";
+import { categories, products } from "@/data/products";
 import { getFeaturedProducts } from "@/data/products";
 import ProductCard from "@/components/products/ProductCard";
+import CollectionSection from "@/components/home/CollectionSection";
 
 const features = [
   {
@@ -26,14 +27,50 @@ const features = [
 const instagramPosts = [
   "https://images.unsplash.com/photo-1509631179647-0177331693ae?w=400",
   "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=400",
-  "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?w=400",
+  "https://images.unsplash.com/photo-1529374255404-311a2a4f1fd9?w=400",
   "https://images.unsplash.com/photo-1496747611176-843222e1e57c?w=400",
   "https://images.unsplash.com/photo-1539109136881-3be0616acf4b?w=400",
   "https://images.unsplash.com/photo-1475180098004-ca77a66827be?w=400",
 ];
 
+// Get products by category slug
+const getProductsByCategory = (slug: string) => 
+  products.filter((p) => p.category === slug);
+
 export default function Home() {
   const featuredProducts = getFeaturedProducts();
+
+  // Collection data with descriptions
+  const collectionsData = [
+    {
+      slug: "t-shirts",
+      name: "T-Shirts",
+      description: "T-shirts premium en coton avec designs uniques inspirés du Dahomey",
+      variant: "grid" as const,
+      bgClass: "bg-background",
+    },
+    {
+      slug: "hoodies",
+      name: "Hoodies",
+      description: "Hoodies oversized ultra-confortables avec broderies royales",
+      variant: "carousel" as const,
+      bgClass: "bg-muted/50",
+    },
+    {
+      slug: "pantalons",
+      name: "Pantalons",
+      description: "Pantalons cargo et joggers pour un style streetwear authentique",
+      variant: "grid" as const,
+      bgClass: "bg-background",
+    },
+    {
+      slug: "accessoires",
+      name: "Accessoires",
+      description: "Casquettes, sacs et accessoires pour compléter votre look",
+      variant: "carousel" as const,
+      bgClass: "bg-muted/50",
+    },
+  ];
 
   return (
     <main>
@@ -98,7 +135,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Categories */}
+      {/* Categories Overview */}
       <section className="py-20 bg-background">
         <div className="container-custom">
           <div className="text-center mb-12">
@@ -114,7 +151,7 @@ export default function Home() {
             {categories.map((category, index) => (
               <Link
                 key={category.id}
-                to={`/shop?category=${category.slug}`}
+                to={`/collection/${category.slug}`}
                 className="group relative aspect-[3/4] rounded-xl overflow-hidden"
                 style={{ animationDelay: `${index * 100}ms` }}
               >
@@ -167,6 +204,19 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Collection Sections */}
+      {collectionsData.map((collection) => (
+        <CollectionSection
+          key={collection.slug}
+          title={collection.name}
+          slug={collection.slug}
+          description={collection.description}
+          products={getProductsByCategory(collection.slug)}
+          variant={collection.variant}
+          bgClass={collection.bgClass}
+        />
+      ))}
 
       {/* About Section */}
       <section id="about" className="py-20 bg-primary">
