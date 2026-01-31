@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { Search, Filter, X, ChevronDown, Grid, LayoutGrid, Loader2 } from "lucide-react";
 import { useProducts, useCategories } from "@/hooks/useProducts";
 import ProductCard from "@/components/products/ProductCard";
+import SEO from "@/components/SEO";
 import { cn } from "@/lib/utils";
 
 const priceRanges = [
@@ -107,6 +108,11 @@ export default function Shop() {
 
   return (
     <main className="pt-24 pb-20 min-h-screen bg-background">
+      <SEO
+        title="Boutique | Dahomey-Gang - Streetwear Premium Africain"
+        description="Découvrez notre collection complète de streetwear premium inspiré du Dahomey. T-shirts, hoodies, pantalons et accessoires uniques."
+        url="https://dahomeyboy.maxiimarket.com/shop"
+      />
       <div className="container-custom">
         {/* Header */}
         <div className="mb-8">

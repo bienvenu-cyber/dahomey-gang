@@ -5,6 +5,7 @@ import { useFeaturedProducts, useProductsByCategory, useCategories } from "@/hoo
 import ProductCard from "@/components/products/ProductCard";
 import CollectionSection from "@/components/home/CollectionSection";
 import PromotionCarousel from "@/components/home/PromotionCarousel";
+import SEO from "@/components/SEO";
 
 export default function Home() {
   const { data: featuredProducts = [], isLoading: featuredLoading } = useFeaturedProducts();
@@ -53,6 +54,7 @@ export default function Home() {
 
   return (
     <main>
+      <SEO />
       {/* Hero Section */}
       <section className="relative min-h-screen flex items-center pt-10">
         <div
