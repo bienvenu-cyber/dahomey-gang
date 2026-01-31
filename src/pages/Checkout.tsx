@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ChevronLeft, CreditCard, Truck, Check } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
@@ -43,6 +44,7 @@ const initialFormData: FormData = {
 
 export default function Checkout() {
   const { items, totalPrice, clearCart } = useCart();
+  const { formatPrice, currency } = useCurrency();
   const { toast } = useToast();
   const navigate = useNavigate();
   
@@ -432,7 +434,7 @@ export default function Checkout() {
                         <p className="text-sm text-muted-foreground">5-7 jours ouvrés</p>
                       </div>
                       <span className="font-bold">
-                        {totalPrice >= 100 ? "Gratuit" : "5,90 €"}
+                        {totalPrice >= 100 ? "Gratuit" : formatPrice(5.90)}
                       </span>
                     </label>
 
@@ -469,7 +471,7 @@ export default function Checkout() {
                         <p className="font-medium">Livraison Express</p>
                         <p className="text-sm text-muted-foreground">2-3 jours ouvrés</p>
                       </div>
-                      <span className="font-bold">12,90 €</span>
+                      <span className="font-bold">{formatPrice(12.90)}</span>
                     </label>
                   </div>
 
@@ -642,7 +644,7 @@ export default function Checkout() {
                       disabled={isSubmitting}
                       className="btn-secondary flex-1"
                     >
-                      {isSubmitting ? "Traitement..." : `Payer ${finalTotal.toFixed(2)} €`}
+                      {isSubmitting ? "Traitement..." : `Payer ${formatPrice(finalTotal)}`}
                     </button>
                   </div>
                 </div>
@@ -682,7 +684,7 @@ export default function Checkout() {
                       </p>
                     </div>
                     <span className="font-medium text-sm">
-                      {(item.product.price * item.quantity).toFixed(2)} €
+                      {formatPrice(item.product.price * item.quantity)}
                     </span>
                   </div>
                 ))}
@@ -691,11 +693,11 @@ export default function Checkout() {
               <div className="border-t border-border pt-4 space-y-3">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Sous-total</span>
-                  <span>{totalPrice.toFixed(2)} €</span>
+                  <span>{formatPrice(totalPrice)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Livraison</span>
-                  <span>{shipping === 0 ? "Gratuit" : `${shipping.toFixed(2)} €`}</span>
+                  <span>{shipping === 0 ? "Gratuit" : formatPrice(shipping)}</span>
                 </div>
               </div>
 
@@ -703,7 +705,7 @@ export default function Checkout() {
                 <div className="flex justify-between text-lg">
                   <span className="font-semibold">Total</span>
                   <span className="font-montserrat font-bold text-primary">
-                    {finalTotal.toFixed(2)} €
+                    {formatPrice(finalTotal)}
                   </span>
                 </div>
               </div>
