@@ -14,6 +14,7 @@ export interface Product {
   new: boolean;
   rating: number;
   reviews: number;
+  onPromotion?: boolean;
 }
 
 export interface CartItem {

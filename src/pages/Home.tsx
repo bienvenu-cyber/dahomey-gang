@@ -1,45 +1,14 @@
 import { Link } from "react-router-dom";
-import { ArrowRight, Truck, Shield, RefreshCw, Star } from "lucide-react";
+import { ArrowRight, Star, Loader2 } from "lucide-react";
 import heroBg from "@/assets/hero-bg.jpg";
-import { categories, products } from "@/data/products";
-import { getFeaturedProducts } from "@/data/products";
+import { useFeaturedProducts, useProductsByCategory, useCategories } from "@/hooks/useProducts";
 import ProductCard from "@/components/products/ProductCard";
 import CollectionSection from "@/components/home/CollectionSection";
 import PromotionCarousel from "@/components/home/PromotionCarousel";
 
-const features = [
-  {
-    icon: Truck,
-    title: "Livraison Gratuite",
-    description: "Dès 100€ d'achat",
-  },
-  {
-    icon: Shield,
-    title: "Paiement Sécurisé",
-    description: "100% sécurisé",
-  },
-  {
-    icon: RefreshCw,
-    title: "Retours Gratuits",
-    description: "Sous 30 jours",
-  },
-];
-
-const instagramPosts = [
-  "https://images.unsplash.com/photo-1509631179647-0177331693ae?w=400",
-  "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=400",
-  "https://images.unsplash.com/photo-1529374255404-311a2a4f1fd9?w=400",
-  "https://images.unsplash.com/photo-1496747611176-843222e1e57c?w=400",
-  "https://images.unsplash.com/photo-1539109136881-3be0616acf4b?w=400",
-  "https://images.unsplash.com/photo-1475180098004-ca77a66827be?w=400",
-];
-
-// Get products by category slug
-const getProductsByCategory = (slug: string) => 
-  products.filter((p) => p.category === slug);
-
 export default function Home() {
-  const featuredProducts = getFeaturedProducts();
+  const { data: featuredProducts = [], isLoading: featuredLoading } = useFeaturedProducts();
+  const { data: categories = [] } = useCategories();
 
   // Collection data with descriptions
   const collectionsData = [
@@ -71,6 +40,15 @@ export default function Home() {
       variant: "carousel" as const,
       bgClass: "bg-muted/50",
     },
+  ];
+
+  const instagramPosts = [
+    "https://images.unsplash.com/photo-1509631179647-0177331693ae?w=400",
+    "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=400",
+    "https://images.unsplash.com/photo-1529374255404-311a2a4f1fd9?w=400",
+    "https://images.unsplash.com/photo-1496747611176-843222e1e57c?w=400",
+    "https://images.unsplash.com/photo-1539109136881-3be0616acf4b?w=400",
+    "https://images.unsplash.com/photo-1475180098004-ca77a66827be?w=400",
   ];
 
   return (
@@ -116,26 +94,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Features */}
-      <section className="bg-primary py-6">
-        <div className="container-custom">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {features.map((feature) => (
-              <div
-                key={feature.title}
-                className="flex items-center gap-4 justify-center py-4"
-              >
-                <feature.icon className="w-8 h-8 text-secondary" />
-                <div>
-                  <h4 className="font-semibold text-white">{feature.title}</h4>
-                  <p className="text-white/60 text-sm">{feature.description}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* Categories Overview */}
       <section className="py-20 bg-background">
         <div className="container-custom">
@@ -149,7 +107,7 @@ export default function Home() {
           </div>
 
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-            {categories.map((category, index) => (
+            {categories.length > 0 ? categories.map((category, index) => (
               <Link
                 key={category.id}
                 to={`/collection/${category.slug}`}
@@ -157,7 +115,7 @@ export default function Home() {
                 style={{ animationDelay: `${index * 100}ms` }}
               >
                 <img
-                  src={category.image}
+                  src={category.image_url || "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=600"}
                   alt={category.name}
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                 />
@@ -172,7 +130,15 @@ export default function Home() {
                   </span>
                 </div>
               </Link>
-            ))}
+            )) : (
+              // Fallback static categories
+              ["T-Shirts", "Hoodies", "Pantalons", "Accessoires"].map((name, index) => (
+                <div
+                  key={name}
+                  className="relative aspect-[3/4] rounded-xl overflow-hidden bg-muted animate-pulse"
+                />
+              ))
+            )}
           </div>
         </div>
       </section>
@@ -180,29 +146,34 @@ export default function Home() {
       {/* Featured Products */}
       <section className="py-20 bg-muted/50">
         <div className="container-custom">
-          <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-4">
-            <div>
-              <h2 className="font-montserrat text-3xl md:text-4xl font-bold text-primary mb-4">
-                Produits Vedettes
-              </h2>
-              <p className="text-muted-foreground max-w-md">
-                Les pièces les plus populaires de notre collection
-              </p>
-            </div>
+          <div className="flex items-center justify-between mb-8 gap-4">
+            <h2 className="font-montserrat text-2xl md:text-3xl font-bold text-primary">
+              Produits Vedettes
+            </h2>
             <Link
               to="/shop"
-              className="inline-flex items-center gap-2 text-primary font-semibold hover:text-secondary transition-colors"
+              className="inline-flex items-center gap-2 text-primary font-semibold hover:text-secondary transition-colors text-sm md:text-base"
             >
-              Voir tout
+              <span className="hidden sm:inline">Voir tout</span>
               <ArrowRight className="w-5 h-5" />
             </Link>
           </div>
 
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-            {featuredProducts.slice(0, 4).map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
+          {featuredLoading ? (
+            <div className="flex items-center justify-center py-20">
+              <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+            </div>
+          ) : featuredProducts.length > 0 ? (
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+              {featuredProducts.slice(0, 4).map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+          ) : (
+            <p className="text-center text-muted-foreground py-12">
+              Aucun produit vedette pour le moment
+            </p>
+          )}
         </div>
       </section>
 
@@ -211,14 +182,9 @@ export default function Home() {
 
       {/* Collection Sections */}
       {collectionsData.map((collection) => (
-        <CollectionSection
+        <CollectionSectionWrapper
           key={collection.slug}
-          title={collection.name}
-          slug={collection.slug}
-          description={collection.description}
-          products={getProductsByCategory(collection.slug)}
-          variant={collection.variant}
-          bgClass={collection.bgClass}
+          collection={collection}
         />
       ))}
 
@@ -332,5 +298,25 @@ export default function Home() {
         </div>
       </section>
     </main>
+  );
+}
+
+// Separate component to use hook for each category
+function CollectionSectionWrapper({ collection }: { 
+  collection: { slug: string; name: string; description: string; variant: "grid" | "carousel"; bgClass: string }
+}) {
+  const { data: products = [] } = useProductsByCategory(collection.slug);
+
+  if (products.length === 0) return null;
+
+  return (
+    <CollectionSection
+      title={collection.name}
+      slug={collection.slug}
+      description={collection.description}
+      products={products}
+      variant={collection.variant}
+      bgClass={collection.bgClass}
+    />
   );
 }

@@ -1,23 +1,36 @@
 import { useState } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
-import { ChevronLeft, ChevronRight, Minus, Plus, Heart, Share2, Truck, Shield, RefreshCw, Star } from "lucide-react";
-import { getProductBySlug, products } from "@/data/products";
+import { useParams, Link } from "react-router-dom";
+import { ChevronLeft, ChevronRight, Minus, Plus, Heart, Truck, Shield, RefreshCw, Star, Loader2 } from "lucide-react";
+import { useProductBySlug, useProductsByCategory } from "@/hooks/useProducts";
 import { useCart } from "@/contexts/CartContext";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import ProductCard from "@/components/products/ProductCard";
+import ShareButton from "@/components/ShareButton";
 import { cn } from "@/lib/utils";
 
 export default function ProductDetails() {
   const { slug } = useParams<{ slug: string }>();
-  const navigate = useNavigate();
   const { addItem } = useCart();
+  const { formatPrice } = useCurrency();
   
-  const product = getProductBySlug(slug || "");
+  const { data: product, isLoading } = useProductBySlug(slug || "");
+  const { data: relatedProducts = [] } = useProductsByCategory(product?.category || "");
   
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [selectedSize, setSelectedSize] = useState<string>("");
   const [selectedColor, setSelectedColor] = useState<string>("");
   const [quantity, setQuantity] = useState(1);
   const [isFavorite, setIsFavorite] = useState(false);
+
+  if (isLoading) {
+    return (
+      <main className="pt-24 pb-20 min-h-screen bg-background">
+        <div className="container-custom flex items-center justify-center py-20">
+          <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+        </div>
+      </main>
+    );
+  }
 
   if (!product) {
     return (
@@ -41,9 +54,7 @@ export default function ProductDetails() {
     addItem(product, selectedSize, selectedColor, quantity);
   };
 
-  const relatedProducts = products
-    .filter((p) => p.category === product.category && p.id !== product.id)
-    .slice(0, 4);
+  const filteredRelated = relatedProducts.filter((p) => p.id !== product.id).slice(0, 4);
 
   const discount = product.originalPrice
     ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
@@ -70,11 +81,17 @@ export default function ProductDetails() {
           <div className="space-y-4">
             {/* Main Image */}
             <div className="relative aspect-square bg-muted rounded-xl overflow-hidden">
-              <img
-                src={product.images[currentImageIndex]}
-                alt={product.name}
-                className="w-full h-full object-cover animate-fade-in"
-              />
+              {product.images.length > 0 ? (
+                <img
+                  src={product.images[currentImageIndex]}
+                  alt={product.name}
+                  className="w-full h-full object-cover animate-fade-in"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                  Pas d'image
+                </div>
+              )}
               
               {/* Navigation */}
               {product.images.length > 1 && (
@@ -114,6 +131,11 @@ export default function ProductDetails() {
                     -{discount}%
                   </span>
                 )}
+              </div>
+
+              {/* Share button */}
+              <div className="absolute top-4 right-4">
+                <ShareButton title={product.name} />
               </div>
             </div>
 
@@ -172,11 +194,11 @@ export default function ProductDetails() {
 
             <div className="flex items-baseline gap-3 mb-6">
               <span className="font-montserrat text-3xl font-bold text-primary">
-                {product.price} €
+                {formatPrice(product.price)}
               </span>
               {product.originalPrice && (
                 <span className="text-xl text-muted-foreground line-through">
-                  {product.originalPrice} €
+                  {formatPrice(product.originalPrice)}
                 </span>
               )}
             </div>
@@ -186,50 +208,54 @@ export default function ProductDetails() {
             </p>
 
             {/* Color Selection */}
-            <div className="mb-6">
-              <label className="text-sm font-medium text-primary mb-3 block">
-                Couleur: {selectedColor || "Choisir une couleur"}
-              </label>
-              <div className="flex gap-3">
-                {product.colors.map((color) => (
-                  <button
-                    key={color.name}
-                    onClick={() => setSelectedColor(color.name)}
-                    className={cn(
-                      "w-10 h-10 rounded-full border-2 transition-all",
-                      selectedColor === color.name
-                        ? "border-secondary scale-110"
-                        : "border-border hover:border-primary"
-                    )}
-                    style={{ backgroundColor: color.hex }}
-                    title={color.name}
-                  />
-                ))}
+            {product.colors.length > 0 && (
+              <div className="mb-6">
+                <label className="text-sm font-medium text-primary mb-3 block">
+                  Couleur: {selectedColor || "Choisir une couleur"}
+                </label>
+                <div className="flex gap-3">
+                  {product.colors.map((color) => (
+                    <button
+                      key={color.name}
+                      onClick={() => setSelectedColor(color.name)}
+                      className={cn(
+                        "w-10 h-10 rounded-full border-2 transition-all",
+                        selectedColor === color.name
+                          ? "border-secondary scale-110"
+                          : "border-border hover:border-primary"
+                      )}
+                      style={{ backgroundColor: color.hex }}
+                      title={color.name}
+                    />
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Size Selection */}
-            <div className="mb-6">
-              <label className="text-sm font-medium text-primary mb-3 block">
-                Taille: {selectedSize || "Choisir une taille"}
-              </label>
-              <div className="flex flex-wrap gap-2">
-                {product.sizes.map((size) => (
-                  <button
-                    key={size}
-                    onClick={() => setSelectedSize(size)}
-                    className={cn(
-                      "min-w-[48px] px-4 py-2 border rounded-lg font-medium transition-all",
-                      selectedSize === size
-                        ? "border-secondary bg-secondary text-secondary-foreground"
-                        : "border-border hover:border-primary"
-                    )}
-                  >
-                    {size}
-                  </button>
-                ))}
+            {product.sizes.length > 0 && (
+              <div className="mb-6">
+                <label className="text-sm font-medium text-primary mb-3 block">
+                  Taille: {selectedSize || "Choisir une taille"}
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {product.sizes.map((size) => (
+                    <button
+                      key={size}
+                      onClick={() => setSelectedSize(size)}
+                      className={cn(
+                        "min-w-[48px] px-4 py-2 border rounded-lg font-medium transition-all",
+                        selectedSize === size
+                          ? "border-secondary bg-secondary text-secondary-foreground"
+                          : "border-border hover:border-primary"
+                      )}
+                    >
+                      {size}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Quantity & Add to Cart */}
             <div className="flex flex-col sm:flex-row gap-4 mb-8">
@@ -276,39 +302,34 @@ export default function ProductDetails() {
               >
                 <Heart className={cn("w-5 h-5", isFavorite && "fill-current")} />
               </button>
-
-              {/* Share */}
-              <button className="p-3 border border-border rounded-lg hover:border-primary transition-colors">
-                <Share2 className="w-5 h-5" />
-              </button>
             </div>
 
             {/* Features */}
             <div className="border-t border-border pt-6 space-y-4">
               <div className="flex items-center gap-3">
                 <Truck className="w-5 h-5 text-secondary" />
-                <span className="text-sm">Livraison gratuite dès 100€</span>
+                <span className="text-sm">Livraison disponible partout en Afrique et Europe</span>
               </div>
               <div className="flex items-center gap-3">
                 <RefreshCw className="w-5 h-5 text-secondary" />
-                <span className="text-sm">Retours gratuits sous 30 jours</span>
+                <span className="text-sm">Retours sous 30 jours</span>
               </div>
               <div className="flex items-center gap-3">
                 <Shield className="w-5 h-5 text-secondary" />
-                <span className="text-sm">Paiement 100% sécurisé</span>
+                <span className="text-sm">Paiement sécurisé</span>
               </div>
             </div>
           </div>
         </div>
 
         {/* Related Products */}
-        {relatedProducts.length > 0 && (
+        {filteredRelated.length > 0 && (
           <section className="mt-20">
             <h2 className="font-montserrat text-2xl font-bold text-primary mb-8">
               Vous aimerez aussi
             </h2>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-              {relatedProducts.map((p) => (
+              {filteredRelated.map((p) => (
                 <ProductCard key={p.id} product={p} />
               ))}
             </div>

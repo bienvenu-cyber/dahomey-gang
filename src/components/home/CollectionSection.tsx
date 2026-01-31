@@ -13,7 +13,7 @@ import {
 interface CollectionSectionProps {
   title: string;
   slug: string;
-  description: string;
+  description?: string;
   products: Product[];
   variant?: "grid" | "carousel";
   bgClass?: string;
@@ -22,7 +22,6 @@ interface CollectionSectionProps {
 export default function CollectionSection({
   title,
   slug,
-  description,
   products,
   variant = "grid",
   bgClass = "bg-background",
@@ -32,18 +31,16 @@ export default function CollectionSection({
   return (
     <section className={`py-16 ${bgClass}`}>
       <div className="container-custom">
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
-          <div>
-            <h2 className="font-montserrat text-2xl md:text-3xl font-bold text-primary mb-2">
-              {title}
-            </h2>
-            <p className="text-muted-foreground max-w-md">{description}</p>
-          </div>
+        {/* Header: Title left, Voir tout right */}
+        <div className="flex items-center justify-between mb-8 gap-4">
+          <h2 className="font-montserrat text-2xl md:text-3xl font-bold text-primary">
+            {title}
+          </h2>
           <Link
             to={`/collection/${slug}`}
-            className="inline-flex items-center gap-2 text-primary font-semibold hover:text-secondary transition-colors"
+            className="inline-flex items-center gap-2 text-primary font-semibold hover:text-secondary transition-colors text-sm md:text-base flex-shrink-0"
           >
-            Voir la collection
+            <span className="hidden sm:inline">Voir la collection</span>
             <ArrowRight className="w-5 h-5" />
           </Link>
         </div>

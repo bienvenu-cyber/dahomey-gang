@@ -1,14 +1,16 @@
 import { useParams, Link } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Loader2 } from "lucide-react";
 import ProductCard from "@/components/products/ProductCard";
-import { categories, getProductsByCategory } from "@/data/products";
+import { useProductsByCategory, useCategories } from "@/hooks/useProducts";
 
 export default function Collection() {
   const { slug } = useParams<{ slug: string }>();
+  const { data: categories = [] } = useCategories();
+  const { data: products = [], isLoading } = useProductsByCategory(slug || "");
+  
   const category = categories.find((c) => c.slug === slug);
-  const products = slug ? getProductsByCategory(slug) : [];
 
-  if (!category) {
+  if (!category && !isLoading) {
     return (
       <main className="min-h-screen pt-24 pb-16">
         <div className="container-custom text-center">
@@ -32,15 +34,15 @@ export default function Collection() {
       {/* Hero */}
       <section className="relative h-64 md:h-80 overflow-hidden">
         <img
-          src={category.image}
-          alt={category.name}
+          src={category?.image_url || "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=800"}
+          alt={category?.name || "Collection"}
           className="w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-primary via-primary/50 to-transparent" />
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="text-center">
             <h1 className="font-montserrat text-4xl md:text-5xl font-black text-white mb-2">
-              {category.name}
+              {category?.name || "Collection"}
             </h1>
             <p className="text-white/80 text-lg">
               {products.length} produit{products.length > 1 ? "s" : ""}
@@ -61,7 +63,7 @@ export default function Collection() {
               Boutique
             </Link>
             <span className="text-muted-foreground">/</span>
-            <span className="text-primary font-medium">{category.name}</span>
+            <span className="text-primary font-medium">{category?.name}</span>
           </nav>
         </div>
       </section>
@@ -69,7 +71,11 @@ export default function Collection() {
       {/* Products Grid */}
       <section className="py-12">
         <div className="container-custom">
-          {products.length === 0 ? (
+          {isLoading ? (
+            <div className="flex items-center justify-center py-16">
+              <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+            </div>
+          ) : products.length === 0 ? (
             <div className="text-center py-16">
               <p className="text-muted-foreground text-lg mb-4">
                 Aucun produit dans cette collection pour le moment.

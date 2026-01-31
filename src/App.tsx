@@ -10,6 +10,8 @@ import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import CartSidebar from "@/components/cart/CartSidebar";
 import CookieConsent from "@/components/CookieConsent";
+import PromoBanner from "@/components/home/PromoBanner";
+import ChatAssistant from "@/components/ChatAssistant";
 import Home from "@/pages/Home";
 import Shop from "@/pages/Shop";
 import Collection from "@/pages/Collection";
@@ -61,6 +63,7 @@ const App = () => (
                 path="*"
                 element={
                   <>
+                    <PromoBanner />
                     <Header />
                     <CartSidebar />
                     <Routes>
@@ -75,6 +78,7 @@ const App = () => (
                     </Routes>
                     <Footer />
                     <CookieConsent />
+                    <ChatAssistant />
                   </>
                 }
               />
