@@ -118,6 +118,16 @@ export default function Footer() {
                   </Link>
                 </li>
               ))}
+              {footerLinks.legal.map((link) => (
+                <li key={link.path}>
+                  <Link
+                    to={link.path}
+                    className="text-white/70 hover:text-secondary text-sm transition-colors"
+                  >
+                    {link.name}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 

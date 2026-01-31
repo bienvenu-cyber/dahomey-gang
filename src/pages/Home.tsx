@@ -1,6 +1,8 @@
 import { Link } from "react-router-dom";
 import { ArrowRight, Star, Loader2 } from "lucide-react";
+import { useState, useEffect } from "react";
 import heroBg from "@/assets/hero-bg.jpg";
+import heroBg2 from "@/assets/dahomeyhero.png";
 import { useFeaturedProducts, useProductsByCategory, useCategories } from "@/hooks/useProducts";
 import ProductCard from "@/components/products/ProductCard";
 import CollectionSection from "@/components/home/CollectionSection";
@@ -10,6 +12,15 @@ import SEO from "@/components/SEO";
 export default function Home() {
   const { data: featuredProducts = [], isLoading: featuredLoading } = useFeaturedProducts();
   const { data: categories = [] } = useCategories();
+  const [currentHeroImage, setCurrentHeroImage] = useState(0);
+  const heroImages = [heroBg2, heroBg];
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentHeroImage((prev) => (prev + 1) % heroImages.length);
+    }, 9000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Collection data with descriptions
   const collectionsData = [
@@ -58,13 +69,13 @@ export default function Home() {
       {/* Hero Section */}
       <section className="relative min-h-screen flex items-center pt-10">
         <div
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-          style={{ backgroundImage: `url(${heroBg})` }}
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-opacity duration-1000"
+          style={{ backgroundImage: `url(${heroImages[currentHeroImage]})` }}
         />
         <div className="overlay-dark" />
         
         <div className="container-custom relative z-10 pt-32">
-          <div className="max-w-2xl animate-fade-up">
+          <div className="max-w-2xl mx-auto text-center animate-fade-up">
             <span className="inline-block px-4 py-2 bg-secondary/20 text-secondary rounded-full text-sm font-semibold mb-6">
               Nouvelle Collection 2025
             </span>
@@ -72,16 +83,13 @@ export default function Home() {
               L'Héritage du{" "}
               <span className="text-gradient">Dahomey</span>
             </h1>
-            <p className="text-lg md:text-xl text-white/80 mb-8 max-w-lg">
-              Streetwear premium inspiré des guerriers amazones. 
-              Chaque pièce raconte une histoire de force et d'authenticité.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4">
-              <Link to="/shop" className="btn-secondary inline-flex items-center gap-2">
+            <div className="mb-8 h-16"></div>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+              <Link to="/shop" className="btn-secondary inline-flex items-center gap-2 justify-center">
                 Explorer la boutique
                 <ArrowRight className="w-5 h-5" />
               </Link>
-              <Link to="/#about" className="btn-outline">
+              <Link to="/#about" className="btn-outline justify-center">
                 Notre histoire
               </Link>
             </div>

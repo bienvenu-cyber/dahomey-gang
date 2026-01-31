@@ -14,6 +14,7 @@ import CartSidebar from "@/components/cart/CartSidebar";
 import CookieConsent from "@/components/CookieConsent";
 import PromoBanner from "@/components/home/PromoBanner";
 import ChatAssistant from "@/components/ChatAssistant";
+import ScrollToTop from "@/components/ScrollToTop";
 import Home from "@/pages/Home";
 import Shop from "@/pages/Shop";
 import Collection from "@/pages/Collection";
@@ -21,6 +22,12 @@ import ProductDetails from "@/pages/ProductDetails";
 import Cart from "@/pages/Cart";
 import Checkout from "@/pages/Checkout";
 import Auth from "@/pages/Auth";
+import Shipping from "@/pages/Shipping";
+import Returns from "@/pages/Returns";
+import FAQ from "@/pages/FAQ";
+import Terms from "@/pages/Terms";
+import Privacy from "@/pages/Privacy";
+import Cookies from "@/pages/Cookies";
 import NotFound from "@/pages/NotFound";
 
 // Lazy load admin pages
@@ -47,6 +54,7 @@ const App = () => (
             <Toaster />
           <Sonner />
           <BrowserRouter>
+                <ScrollToTop />
             <Routes>
                 {/* Admin Routes (lazy loaded) */}
                 <Route
@@ -84,6 +92,12 @@ const App = () => (
                       <Route path="/cart" element={<Cart />} />
                       <Route path="/checkout" element={<Checkout />} />
                       <Route path="/auth" element={<Auth />} />
+                      <Route path="/shipping" element={<Shipping />} />
+                      <Route path="/returns" element={<Returns />} />
+                      <Route path="/faq" element={<FAQ />} />
+                      <Route path="/terms" element={<Terms />} />
+                      <Route path="/privacy" element={<Privacy />} />
+                      <Route path="/cookies" element={<Cookies />} />
                       <Route path="*" element={<NotFound />} />
                     </Routes>
                     <Footer />

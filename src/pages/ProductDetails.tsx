@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
-import { ChevronLeft, ChevronRight, Minus, Plus, Heart, Truck, Shield, RefreshCw, Star, Loader2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Minus, Plus, Heart, Truck, Shield, RefreshCw, Star, Loader2, AlertCircle } from "lucide-react";
 import { useProductBySlug, useProductsByCategory } from "@/hooks/useProducts";
 import { useCart } from "@/contexts/CartContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
@@ -21,6 +21,26 @@ export default function ProductDetails() {
   const [selectedColor, setSelectedColor] = useState<string>("");
   const [quantity, setQuantity] = useState(1);
   const [isFavorite, setIsFavorite] = useState(false);
+  const [showWarning, setShowWarning] = useState(false);
+
+  // Auto-select if only one option
+  useEffect(() => {
+    if (product) {
+      if (product.sizes.length === 1 && !selectedSize) {
+        setSelectedSize(product.sizes[0]);
+      }
+      if (product.colors.length === 1 && !selectedColor) {
+        setSelectedColor(product.colors[0].name);
+      }
+    }
+  }, [product, selectedSize, selectedColor]);
+
+  // Hide warning when user selects
+  useEffect(() => {
+    if (showWarning && ((product?.sizes.length === 1 || selectedSize) && (product?.colors.length === 1 || selectedColor))) {
+      setShowWarning(false);
+    }
+  }, [selectedSize, selectedColor, showWarning, product]);
 
   if (isLoading) {
     return (
@@ -48,10 +68,21 @@ export default function ProductDetails() {
   }
 
   const handleAddToCart = () => {
-    if (!selectedSize || !selectedColor) {
+    // Check if selection is needed
+    const needsSize = product.sizes.length > 1 && !selectedSize;
+    const needsColor = product.colors.length > 1 && !selectedColor;
+
+    if (needsSize || needsColor) {
+      setShowWarning(true);
       return;
     }
-    addItem(product, selectedSize, selectedColor, quantity);
+
+    // Auto-select if empty but only one option
+    const finalSize = selectedSize || (product.sizes.length === 1 ? product.sizes[0] : "") || "Standard";
+    const finalColor = selectedColor || (product.colors.length === 1 ? product.colors[0].name : "") || "Défaut";
+
+    addItem(product, finalSize, finalColor, quantity);
+    setShowWarning(false);
   };
 
   const filteredRelated = relatedProducts.filter((p) => p.id !== product.id).slice(0, 4);
@@ -258,50 +289,62 @@ export default function ProductDetails() {
             )}
 
             {/* Quantity & Add to Cart */}
-            <div className="flex flex-col sm:flex-row gap-4 mb-8">
-              {/* Quantity */}
-              <div className="flex items-center border border-border rounded-lg">
+            <div className="flex flex-col gap-4 mb-8">
+              {/* Error message if selection needed */}
+              {showWarning && ((product.sizes.length > 1 && !selectedSize) ||
+                (product.colors.length > 1 && !selectedColor)) && (
+                  <div className="flex items-center gap-2 p-3 bg-accent/10 border border-accent/20 rounded-lg text-sm text-accent">
+                    <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                    <span>
+                      Veuillez sélectionner
+                      {product.sizes.length > 1 && !selectedSize && " une taille"}
+                      {product.sizes.length > 1 && !selectedSize && product.colors.length > 1 && !selectedColor && " et"}
+                      {product.colors.length > 1 && !selectedColor && " une couleur"}
+                    </span>
+                  </div>
+                )}
+
+              <div className="flex flex-col sm:flex-row gap-4">
+                {/* Quantity */}
+                <div className="flex items-center border border-border rounded-lg">
+                  <button
+                    onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                    className="px-4 py-3 hover:bg-muted transition-colors"
+                  >
+                    <Minus className="w-4 h-4" />
+                  </button>
+                  <span className="px-4 py-3 font-medium min-w-[48px] text-center">
+                    {quantity}
+                  </span>
+                  <button
+                    onClick={() => setQuantity((q) => q + 1)}
+                    className="px-4 py-3 hover:bg-muted transition-colors"
+                  >
+                    <Plus className="w-4 h-4" />
+                  </button>
+                </div>
+
+                {/* Add to Cart */}
                 <button
-                  onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                  className="px-4 py-3 hover:bg-muted transition-colors"
+                  onClick={handleAddToCart}
+                  className="flex-1 btn-secondary"
                 >
-                  <Minus className="w-4 h-4" />
+                  Ajouter au panier
                 </button>
-                <span className="px-4 py-3 font-medium min-w-[48px] text-center">
-                  {quantity}
-                </span>
+
+                {/* Favorite */}
                 <button
-                  onClick={() => setQuantity((q) => q + 1)}
-                  className="px-4 py-3 hover:bg-muted transition-colors"
+                  onClick={() => setIsFavorite(!isFavorite)}
+                  className={cn(
+                    "p-3 border rounded-lg transition-all",
+                    isFavorite
+                      ? "border-accent bg-accent text-white"
+                      : "border-border hover:border-accent hover:text-accent"
+                  )}
                 >
-                  <Plus className="w-4 h-4" />
+                  <Heart className={cn("w-5 h-5", isFavorite && "fill-current")} />
                 </button>
               </div>
-
-              {/* Add to Cart */}
-              <button
-                onClick={handleAddToCart}
-                disabled={!selectedSize || !selectedColor}
-                className={cn(
-                  "flex-1 btn-secondary",
-                  (!selectedSize || !selectedColor) && "opacity-50 cursor-not-allowed"
-                )}
-              >
-                Ajouter au panier
-              </button>
-
-              {/* Favorite */}
-              <button
-                onClick={() => setIsFavorite(!isFavorite)}
-                className={cn(
-                  "p-3 border rounded-lg transition-all",
-                  isFavorite
-                    ? "border-accent bg-accent text-white"
-                    : "border-border hover:border-accent hover:text-accent"
-                )}
-              >
-                <Heart className={cn("w-5 h-5", isFavorite && "fill-current")} />
-              </button>
             </div>
 
             {/* Features */}

@@ -17,7 +17,7 @@ export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const { toggleCart, totalItems } = useCart();
+  const { toggleCart, totalItems, isOpen: isCartOpen } = useCart();
   const location = useLocation();
 
   useEffect(() => {
@@ -32,6 +32,8 @@ export default function Header() {
     setIsMobileMenuOpen(false);
   }, [location]);
 
+  const showBanner = window.scrollY <= 50 && !isCartOpen;
+
   return (
     <>
       <header
@@ -39,7 +41,9 @@ export default function Header() {
           "fixed left-0 right-0 z-50 transition-all duration-300",
           isScrolled
             ? "top-0 bg-primary/95 backdrop-blur-md shadow-lg py-3"
-            : "top-10 bg-transparent py-5"
+            : showBanner
+              ? "top-[40px] bg-primary/80 backdrop-blur-sm py-5"
+              : "top-0 bg-primary/80 backdrop-blur-sm py-5"
         )}
       >
         <div className="container-custom">

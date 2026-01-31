@@ -123,9 +123,10 @@ export const useProductBySlug = (slug: string) => {
         .from("products")
         .select("*, categories:category_id(slug, name)")
         .eq("slug", slug)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
+      if (!data) return null;
       return transformProduct(data);
     },
     enabled: !!slug,

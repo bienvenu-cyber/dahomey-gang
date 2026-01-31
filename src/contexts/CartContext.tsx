@@ -61,7 +61,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
       return [...prev, { product, size, color, quantity }];
     });
-    openCart();
   };
 
   const removeItem = (productId: string, size: string, color: string) => {
