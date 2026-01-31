@@ -29,6 +29,7 @@ import Customers from "@/pages/admin/Customers";
 import Payments from "@/pages/admin/Payments";
 import Emails from "@/pages/admin/Emails";
 import Settings from "@/pages/admin/Settings";
+import PromoCodes from "@/pages/admin/PromoCodes";
 
 const queryClient = new QueryClient();
 
@@ -46,6 +47,7 @@ const App = () => (
               <Route path="/admin" element={<AdminLayout />}>
                 <Route index element={<Dashboard />} />
                 <Route path="products" element={<Products />} />
+                <Route path="promo-codes" element={<PromoCodes />} />
                 <Route path="orders" element={<Orders />} />
                 <Route path="stats" element={<Stats />} />
                 <Route path="customers" element={<Customers />} />

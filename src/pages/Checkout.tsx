@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ChevronLeft, CreditCard, Truck, Check } from "lucide-react";
+import { ChevronLeft, CreditCard, Truck, Check, Tag, X } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 
 interface FormData {
@@ -52,6 +53,16 @@ export default function Checkout() {
   const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [step, setStep] = useState<1 | 2 | 3>(1);
+  
+  // Promo code state
+  const [promoCode, setPromoCode] = useState("");
+  const [promoLoading, setPromoLoading] = useState(false);
+  const [appliedPromo, setAppliedPromo] = useState<{
+    code: string;
+    discount_type: string;
+    discount_value: number;
+  } | null>(null);
+  const [promoError, setPromoError] = useState("");
 
   if (items.length === 0) {
     return (
@@ -68,8 +79,77 @@ export default function Checkout() {
     );
   }
 
-  const shipping = formData.deliveryMethod === "express" ? 12.90 : totalPrice >= 100 ? 0 : 5.90;
-  const finalTotal = totalPrice + shipping;
+  // Calculate discount
+  const calculateDiscount = () => {
+    if (!appliedPromo) return 0;
+    
+    if (appliedPromo.discount_type === "percentage") {
+      return (totalPrice * appliedPromo.discount_value) / 100;
+    } else {
+      return Math.min(appliedPromo.discount_value, totalPrice);
+    }
+  };
+
+  const discount = calculateDiscount();
+  const subtotalAfterDiscount = totalPrice - discount;
+  const shipping = formData.deliveryMethod === "express" ? 12.90 : subtotalAfterDiscount >= 100 ? 0 : 5.90;
+  const finalTotal = subtotalAfterDiscount + shipping;
+
+  const applyPromoCode = async () => {
+    if (!promoCode.trim()) return;
+    
+    setPromoLoading(true);
+    setPromoError("");
+    
+    try {
+      const { data, error } = await supabase
+        .from("promo_codes")
+        .select("*")
+        .eq("code", promoCode.toUpperCase())
+        .eq("is_active", true)
+        .single();
+      
+      if (error || !data) {
+        setPromoError("Code promo invalide");
+        return;
+      }
+      
+      // Check expiration
+      if (data.valid_until && new Date(data.valid_until) < new Date()) {
+        setPromoError("Ce code promo a expiré");
+        return;
+      }
+      
+      // Check min order amount
+      if (data.min_order_amount && totalPrice < data.min_order_amount) {
+        setPromoError(`Commande minimum de ${data.min_order_amount}€ requise`);
+        return;
+      }
+      
+      // Check max uses
+      if (data.max_uses && data.current_uses >= data.max_uses) {
+        setPromoError("Ce code promo a atteint sa limite d'utilisation");
+        return;
+      }
+      
+      setAppliedPromo({
+        code: data.code,
+        discount_type: data.discount_type,
+        discount_value: data.discount_value,
+      });
+      setPromoCode("");
+      toast({ title: "Code promo appliqué !" });
+    } catch (error) {
+      setPromoError("Erreur lors de la vérification du code");
+    } finally {
+      setPromoLoading(false);
+    }
+  };
+
+  const removePromoCode = () => {
+    setAppliedPromo(null);
+    toast({ title: "Code promo retiré" });
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
@@ -434,7 +514,7 @@ export default function Checkout() {
                         <p className="text-sm text-muted-foreground">5-7 jours ouvrés</p>
                       </div>
                       <span className="font-bold">
-                        {totalPrice >= 100 ? "Gratuit" : formatPrice(5.90)}
+                        {subtotalAfterDiscount >= 100 ? "Gratuit" : formatPrice(5.90)}
                       </span>
                     </label>
 
@@ -690,11 +770,71 @@ export default function Checkout() {
                 ))}
               </div>
 
+              {/* Promo Code Section */}
+              <div className="border-t border-border pt-4 mb-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <Tag className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-sm font-medium">Code promo</span>
+                </div>
+                
+                {appliedPromo ? (
+                  <div className="flex items-center justify-between bg-secondary/10 rounded-lg p-3">
+                    <div>
+                      <span className="font-mono font-bold text-secondary">
+                        {appliedPromo.code}
+                      </span>
+                      <p className="text-xs text-muted-foreground">
+                        {appliedPromo.discount_type === "percentage"
+                          ? `-${appliedPromo.discount_value}%`
+                          : `-${formatPrice(appliedPromo.discount_value)}`}
+                      </p>
+                    </div>
+                    <button
+                      onClick={removePromoCode}
+                      className="text-muted-foreground hover:text-destructive transition-colors"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={promoCode}
+                        onChange={(e) => {
+                          setPromoCode(e.target.value);
+                          setPromoError("");
+                        }}
+                        placeholder="Entrer le code"
+                        className="flex-1 px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-secondary/50"
+                      />
+                      <button
+                        onClick={applyPromoCode}
+                        disabled={promoLoading || !promoCode.trim()}
+                        className="px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary/90 disabled:opacity-50 transition-colors"
+                      >
+                        {promoLoading ? "..." : "Appliquer"}
+                      </button>
+                    </div>
+                    {promoError && (
+                      <p className="text-xs text-accent">{promoError}</p>
+                    )}
+                  </div>
+                )}
+              </div>
+
               <div className="border-t border-border pt-4 space-y-3">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Sous-total</span>
                   <span>{formatPrice(totalPrice)}</span>
                 </div>
+                {discount > 0 && (
+                  <div className="flex justify-between text-sm text-secondary">
+                    <span>Réduction</span>
+                    <span>-{formatPrice(discount)}</span>
+                  </div>
+                )}
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Livraison</span>
                   <span>{shipping === 0 ? "Gratuit" : formatPrice(shipping)}</span>

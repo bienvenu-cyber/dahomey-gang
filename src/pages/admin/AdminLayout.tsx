@@ -7,20 +7,22 @@ import {
   Users,
   Settings,
   Menu,
-  X,
   LogOut,
   ChevronRight,
   BarChart3,
   Mail,
   CreditCard,
+  Tag,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
+import "@/styles/admin-theme.css";
 
 const navItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/admin" },
   { icon: BarChart3, label: "Statistiques", path: "/admin/stats" },
   { icon: Package, label: "Produits", path: "/admin/products" },
+  { icon: Tag, label: "Codes Promo", path: "/admin/promo-codes" },
   { icon: ShoppingCart, label: "Commandes", path: "/admin/orders" },
   { icon: Users, label: "Clients", path: "/admin/customers" },
   { icon: CreditCard, label: "Paiements", path: "/admin/payments" },
@@ -36,9 +38,9 @@ export default function AdminLayout() {
   // Show loading state
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="admin-theme min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
-          <div className="w-8 h-8 border-4 border-secondary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
           <p className="text-muted-foreground">Chargement...</p>
         </div>
       </div>
@@ -55,7 +57,7 @@ export default function AdminLayout() {
   }
 
   return (
-    <div className="min-h-screen bg-muted/30">
+    <div className="admin-theme min-h-screen bg-background">
       {/* Mobile sidebar backdrop */}
       {sidebarOpen && (
         <div
@@ -67,18 +69,18 @@ export default function AdminLayout() {
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed top-0 left-0 z-50 h-full w-64 bg-primary transform transition-transform duration-300 lg:translate-x-0",
+          "fixed top-0 left-0 z-50 h-full w-64 bg-sidebar transform transition-transform duration-300 lg:translate-x-0",
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
         <div className="flex flex-col h-full">
           {/* Logo */}
-          <div className="p-6 border-b border-white/10">
+          <div className="p-6 border-b border-sidebar-border">
             <Link to="/" className="flex items-center gap-2">
-              <span className="font-montserrat text-xl font-black text-secondary">
+              <span className="font-montserrat text-xl font-black text-primary">
                 DAHOMEY
               </span>
-              <span className="text-xs text-white/60 bg-white/10 px-2 py-1 rounded">
+              <span className="text-xs text-sidebar-foreground/60 bg-sidebar-border px-2 py-1 rounded">
                 Admin
               </span>
             </Link>
@@ -96,8 +98,8 @@ export default function AdminLayout() {
                   className={cn(
                     "flex items-center gap-3 px-4 py-3 rounded-lg transition-colors",
                     isActive
-                      ? "bg-secondary text-secondary-foreground"
-                      : "text-white/70 hover:bg-white/10 hover:text-white"
+                      ? "bg-primary text-primary-foreground"
+                      : "text-sidebar-foreground/70 hover:bg-sidebar-border hover:text-sidebar-foreground"
                   )}
                 >
                   <item.icon className="w-5 h-5" />
@@ -109,23 +111,23 @@ export default function AdminLayout() {
           </nav>
 
           {/* User info & Logout */}
-          <div className="p-4 border-t border-white/10">
+          <div className="p-4 border-t border-sidebar-border">
             <div className="flex items-center gap-3 px-4 py-2 mb-2">
-              <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center">
-                <span className="text-secondary-foreground font-bold text-sm">
+              <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
+                <span className="text-primary-foreground font-bold text-sm">
                   {user.email?.charAt(0).toUpperCase()}
                 </span>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-white text-sm font-medium truncate">
+                <p className="text-sidebar-foreground text-sm font-medium truncate">
                   {user.email}
                 </p>
-                <p className="text-white/50 text-xs">Administrateur</p>
+                <p className="text-sidebar-foreground/50 text-xs">Administrateur</p>
               </div>
             </div>
             <button
               onClick={signOut}
-              className="flex items-center gap-3 px-4 py-2 w-full text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+              className="flex items-center gap-3 px-4 py-2 w-full text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-border rounded-lg transition-colors"
             >
               <LogOut className="w-5 h-5" />
               <span>Déconnexion</span>
@@ -137,11 +139,11 @@ export default function AdminLayout() {
       {/* Main content */}
       <div className="lg:pl-64">
         {/* Top bar */}
-        <header className="sticky top-0 z-30 bg-background border-b px-4 py-3 lg:px-8">
+        <header className="sticky top-0 z-30 bg-card border-b border-border px-4 py-3 lg:px-8">
           <div className="flex items-center justify-between">
             <button
               onClick={() => setSidebarOpen(true)}
-              className="lg:hidden p-2 text-primary hover:bg-muted rounded-lg"
+              className="lg:hidden p-2 text-foreground hover:bg-muted rounded-lg"
             >
               <Menu className="w-6 h-6" />
             </button>

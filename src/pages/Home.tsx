@@ -5,6 +5,7 @@ import { categories, products } from "@/data/products";
 import { getFeaturedProducts } from "@/data/products";
 import ProductCard from "@/components/products/ProductCard";
 import CollectionSection from "@/components/home/CollectionSection";
+import PromotionCarousel from "@/components/home/PromotionCarousel";
 
 const features = [
   {
@@ -204,6 +205,9 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Promotion Carousel - Only shows if there are products on promotion */}
+      <PromotionCarousel />
 
       {/* Collection Sections */}
       {collectionsData.map((collection) => (

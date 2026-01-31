@@ -6,17 +6,18 @@ import {
   Search,
   Package,
   X,
+  Star,
+  Flame,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   Select,
@@ -29,6 +30,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
+import ImageUpload from "@/components/admin/ImageUpload";
 
 interface Product {
   id: string;
@@ -37,6 +39,7 @@ interface Product {
   description: string;
   price: number;
   original_price: number | null;
+  promotion_price: number | null;
   category_id: string | null;
   images: string[];
   sizes: string[];
@@ -44,6 +47,7 @@ interface Product {
   stock: number;
   featured: boolean;
   new: boolean;
+  on_promotion: boolean;
   created_at: string;
 }
 
@@ -59,6 +63,7 @@ const defaultProduct: Partial<Product> = {
   description: "",
   price: 0,
   original_price: null,
+  promotion_price: null,
   category_id: null,
   images: [],
   sizes: [],
@@ -66,6 +71,7 @@ const defaultProduct: Partial<Product> = {
   stock: 0,
   featured: false,
   new: false,
+  on_promotion: false,
 };
 
 export default function Products() {
@@ -93,7 +99,6 @@ export default function Products() {
 
       if (error) throw error;
       
-      // Transform the data to match our interface
       const transformedData = data?.map(p => ({
         ...p,
         colors: (Array.isArray(p.colors) ? p.colors : []) as { name: string; hex: string }[]
@@ -141,6 +146,7 @@ export default function Products() {
         description: formData.description,
         price: formData.price,
         original_price: formData.original_price,
+        promotion_price: formData.on_promotion ? formData.promotion_price : null,
         category_id: formData.category_id,
         images: formData.images || [],
         sizes: formData.sizes || [],
@@ -148,6 +154,7 @@ export default function Products() {
         stock: formData.stock,
         featured: formData.featured,
         new: formData.new,
+        on_promotion: formData.on_promotion,
       };
 
       if (editingProduct?.id) {
@@ -197,6 +204,44 @@ export default function Products() {
     }
   };
 
+  const toggleFeatured = async (product: Product) => {
+    try {
+      const { error } = await supabase
+        .from("products")
+        .update({ featured: !product.featured })
+        .eq("id", product.id);
+      
+      if (error) throw error;
+      toast({ title: product.featured ? "Retiré des vedettes" : "Ajouté aux vedettes" });
+      fetchProducts();
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Impossible de mettre à jour le produit",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const togglePromotion = async (product: Product) => {
+    try {
+      const { error } = await supabase
+        .from("products")
+        .update({ on_promotion: !product.on_promotion })
+        .eq("id", product.id);
+      
+      if (error) throw error;
+      toast({ title: product.on_promotion ? "Retiré des promos" : "Ajouté aux promos" });
+      fetchProducts();
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Impossible de mettre à jour le produit",
+        variant: "destructive",
+      });
+    }
+  };
+
   const openEditDialog = (product: Product) => {
     setEditingProduct(product);
     setFormData(product);
@@ -225,7 +270,7 @@ export default function Products() {
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="font-montserrat text-2xl md:text-3xl font-bold text-primary">
+          <h1 className="font-montserrat text-2xl md:text-3xl font-bold text-foreground">
             Produits
           </h1>
           <p className="text-muted-foreground">
@@ -283,13 +328,13 @@ export default function Products() {
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-primary truncate">
+                  <h3 className="font-semibold text-foreground truncate">
                     {product.name}
                   </h3>
                   <p className="text-sm text-muted-foreground">
                     {product.price.toFixed(2)} € • Stock: {product.stock}
                   </p>
-                  <div className="flex gap-2 mt-1">
+                  <div className="flex gap-2 mt-1 flex-wrap">
                     {product.featured && (
                       <span className="text-xs bg-secondary/20 text-secondary px-2 py-0.5 rounded">
                         Vedette
@@ -300,9 +345,32 @@ export default function Products() {
                         Nouveau
                       </span>
                     )}
+                    {product.on_promotion && (
+                      <span className="text-xs bg-accent/20 text-accent px-2 py-0.5 rounded">
+                        Promo
+                      </span>
+                    )}
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => toggleFeatured(product)}
+                    className={product.featured ? "text-secondary" : ""}
+                    title="Vedette"
+                  >
+                    <Star className={`w-4 h-4 ${product.featured ? "fill-secondary" : ""}`} />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => togglePromotion(product)}
+                    className={product.on_promotion ? "text-accent" : ""}
+                    title="Promotion"
+                  >
+                    <Flame className={`w-4 h-4 ${product.on_promotion ? "fill-accent" : ""}`} />
+                  </Button>
                   <Button
                     variant="outline"
                     size="icon"
@@ -417,21 +485,17 @@ export default function Products() {
                   rows={3}
                 />
               </div>
+              
+              {/* Image Upload */}
               <div className="col-span-2">
-                <Label htmlFor="images">URLs des images (une par ligne)</Label>
-                <Textarea
-                  id="images"
-                  value={formData.images?.join("\n") || ""}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      images: e.target.value.split("\n").filter((u) => u.trim()),
-                    })
-                  }
-                  rows={2}
-                  placeholder="https://example.com/image1.jpg"
+                <Label>Images du produit</Label>
+                <ImageUpload
+                  images={formData.images || []}
+                  onImagesChange={(images) => setFormData({ ...formData, images })}
+                  maxImages={5}
                 />
               </div>
+
               <div>
                 <Label htmlFor="sizes">Tailles (séparées par virgule)</Label>
                 <Input
@@ -448,7 +512,7 @@ export default function Products() {
               </div>
               <div>
                 <Label>Options</Label>
-                <div className="flex gap-4 mt-2">
+                <div className="flex flex-wrap gap-4 mt-2">
                   <div className="flex items-center gap-2">
                     <Switch
                       id="featured"
@@ -474,6 +538,42 @@ export default function Products() {
                     </Label>
                   </div>
                 </div>
+              </div>
+
+              {/* Promotion Section */}
+              <div className="col-span-2 border-t pt-4">
+                <div className="flex items-center gap-2 mb-4">
+                  <Switch
+                    id="on_promotion"
+                    checked={formData.on_promotion || false}
+                    onCheckedChange={(checked) =>
+                      setFormData({ ...formData, on_promotion: checked })
+                    }
+                  />
+                  <Label htmlFor="on_promotion" className="font-semibold flex items-center gap-2">
+                    <Flame className="w-4 h-4 text-accent" />
+                    En promotion
+                  </Label>
+                </div>
+                {formData.on_promotion && (
+                  <div>
+                    <Label htmlFor="promotion_price">Prix promo (€) *</Label>
+                    <Input
+                      id="promotion_price"
+                      type="number"
+                      step="0.01"
+                      value={formData.promotion_price || ""}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          promotion_price: parseFloat(e.target.value),
+                        })
+                      }
+                      placeholder="Prix réduit"
+                      required={formData.on_promotion}
+                    />
+                  </div>
+                )}
               </div>
             </div>
             <div className="flex justify-end gap-2 pt-4">
