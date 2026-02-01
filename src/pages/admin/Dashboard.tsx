@@ -8,9 +8,13 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   Euro,
+  RefreshCw,
+  AlertCircle,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 
 interface Stats {
   totalProducts: number;
@@ -31,24 +35,33 @@ export default function Dashboard() {
     recentOrders: [],
   });
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
     fetchStats();
   }, []);
 
   const fetchStats = async () => {
+    setLoading(true);
+    setError(null);
+
     try {
       // Fetch products count
-      const { count: productsCount } = await supabase
+      const { count: productsCount, error: productsError } = await supabase
         .from("products")
         .select("*", { count: "exact", head: true });
 
+      if (productsError) throw productsError;
+
       // Fetch orders
-      const { data: orders, count: ordersCount } = await supabase
+      const { data: orders, count: ordersCount, error: ordersError } = await supabase
         .from("orders")
         .select("*", { count: "exact" })
         .order("created_at", { ascending: false })
         .limit(5);
+
+      if (ordersError) throw ordersError;
 
       // Calculate revenue from orders
       const totalRevenue = orders?.reduce((sum, order) => sum + Number(order.total), 0) || 0;
@@ -57,20 +70,32 @@ export default function Dashboard() {
       const pendingOrders = orders?.filter(o => o.status === "pending").length || 0;
 
       // Fetch unique customers count
-      const { data: customers } = await supabase
+      const { count: customersCount, error: customersError } = await supabase
         .from("profiles")
-        .select("id", { count: "exact", head: true });
+        .select("*", { count: "exact", head: true });
+
+      if (customersError) throw customersError;
 
       setStats({
         totalProducts: productsCount || 0,
         totalOrders: ordersCount || 0,
-        totalCustomers: customers ? 1 : 0, // Placeholder
+        totalCustomers: customersCount || 0,
         totalRevenue,
         pendingOrders,
         recentOrders: orders || [],
       });
-    } catch (error) {
-      // Error fetching stats
+
+      toast({
+        title: "Statistiques actualisées",
+        description: "Les données ont été mises à jour",
+      });
+    } catch (error: any) {
+      setError(error.message || "Erreur lors du chargement des statistiques");
+      toast({
+        title: "Erreur",
+        description: "Impossible de charger les statistiques",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
@@ -135,7 +160,7 @@ export default function Dashboard() {
     );
   };
 
-  if (loading) {
+  if (loading && !error) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="w-8 h-8 border-4 border-secondary border-t-transparent rounded-full animate-spin" />
@@ -143,15 +168,37 @@ export default function Dashboard() {
     );
   }
 
+  if (error && !loading) {
+    return (
+      <Card className="border-destructive">
+        <CardContent className="flex flex-col items-center justify-center py-16">
+          <AlertCircle className="w-12 h-12 text-destructive mb-4" />
+          <h3 className="font-semibold text-lg mb-2">Erreur de chargement</h3>
+          <p className="text-muted-foreground text-center mb-4">{error}</p>
+          <Button onClick={fetchStats} className="gap-2">
+            <RefreshCw className="w-4 h-4" />
+            Réessayer
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="font-montserrat text-2xl md:text-3xl font-bold text-primary">
-          Dashboard
-        </h1>
-        <p className="text-muted-foreground">
-          Vue d'ensemble de votre boutique
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="font-montserrat text-2xl md:text-3xl font-bold text-primary">
+            Dashboard
+          </h1>
+          <p className="text-muted-foreground">
+            Vue d'ensemble de votre boutique
+          </p>
+        </div>
+        <Button onClick={fetchStats} variant="outline" className="gap-2">
+          <RefreshCw className="w-4 h-4" />
+          Actualiser
+        </Button>
       </div>
 
       {/* Stats Grid */}

@@ -76,9 +76,12 @@ const defaultProduct: Partial<Product> = {
 
 export default function Products() {
   const [products, setProducts] = useState<Product[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [itemsPerPage] = useState(10);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Partial<Product> | null>(null);
   const [formData, setFormData] = useState<Partial<Product>>(defaultProduct);
@@ -88,14 +91,19 @@ export default function Products() {
   useEffect(() => {
     fetchProducts();
     fetchCategories();
-  }, []);
+  }, [page]);
 
   const fetchProducts = async () => {
+    setLoading(true);
     try {
-      const { data, error } = await supabase
+      const from = (page - 1) * itemsPerPage;
+      const to = from + itemsPerPage - 1;
+
+      const { data, error, count } = await supabase
         .from("products")
-        .select("*")
-        .order("created_at", { ascending: false });
+        .select("*", { count: "exact" })
+        .order("created_at", { ascending: false })
+        .range(from, to);
 
       if (error) throw error;
       
@@ -105,6 +113,7 @@ export default function Products() {
       })) || [];
       
       setProducts(transformedData);
+      setTotalCount(count || 0);
     } catch (error) {
       toast({
         title: "Erreur",
@@ -136,12 +145,51 @@ export default function Products() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validation
+    if (!formData.name?.trim()) {
+      toast({ title: "Erreur", description: "Le nom est requis", variant: "destructive" });
+      return;
+    }
+
+    if (!formData.price || formData.price <= 0) {
+      toast({ title: "Erreur", description: "Le prix doit être supérieur à 0", variant: "destructive" });
+      return;
+    }
+
+    if (formData.stock === undefined || formData.stock < 0) {
+      toast({ title: "Erreur", description: "Le stock doit être >= 0", variant: "destructive" });
+      return;
+    }
+
+    if (!formData.images || formData.images.length === 0) {
+      toast({ title: "Erreur", description: "Au moins une image est requise", variant: "destructive" });
+      return;
+    }
+
     setSaving(true);
 
     try {
+      const slug = formData.slug || generateSlug(formData.name || "");
+
+      // Vérifier unicité du slug
+      if (!editingProduct?.id || slug !== editingProduct.slug) {
+        const { data: existing } = await supabase
+          .from("products")
+          .select("id")
+          .eq("slug", slug)
+          .maybeSingle();
+
+        if (existing) {
+          toast({ title: "Erreur", description: "Ce slug existe déjà", variant: "destructive" });
+          setSaving(false);
+          return;
+        }
+      }
+
       const productData = {
         name: formData.name,
-        slug: formData.slug || generateSlug(formData.name || ""),
+        slug,
         description: formData.description,
         price: formData.price,
         original_price: formData.original_price,
@@ -173,6 +221,7 @@ export default function Products() {
       setDialogOpen(false);
       setEditingProduct(null);
       setFormData(defaultProduct);
+      setPage(1);
       fetchProducts();
     } catch (error: any) {
       toast({
@@ -192,7 +241,11 @@ export default function Products() {
       const { error } = await supabase.from("products").delete().eq("id", id);
       if (error) throw error;
       toast({ title: "Produit supprimé" });
-      fetchProducts();
+      if (products.length === 1 && page > 1) {
+        setPage(page - 1);
+      } else {
+        fetchProducts();
+      }
     } catch (error) {
       toast({
         title: "Erreur",
@@ -200,6 +253,26 @@ export default function Products() {
         variant: "destructive",
       });
     }
+  };
+
+  const addColor = () => {
+    setFormData({
+      ...formData,
+      colors: [...(formData.colors || []), { name: "", hex: "#000000" }],
+    });
+  };
+
+  const removeColor = (index: number) => {
+    setFormData({
+      ...formData,
+      colors: formData.colors?.filter((_, i) => i !== index) || [],
+    });
+  };
+
+  const updateColor = (index: number, field: "name" | "hex", value: string) => {
+    const newColors = [...(formData.colors || [])];
+    newColors[index] = { ...newColors[index], [field]: value };
+    setFormData({ ...formData, colors: newColors });
   };
 
   const toggleFeatured = async (product: Product) => {
@@ -391,6 +464,34 @@ export default function Products() {
         </div>
       )}
 
+      {/* Pagination */}
+      {filteredProducts.length > 0 && totalCount > itemsPerPage && (
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-muted-foreground">
+            Affichage de {(page - 1) * itemsPerPage + 1} à{" "}
+            {Math.min(page * itemsPerPage, totalCount)} sur {totalCount} produits
+          </p>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+              disabled={page === 1}
+            >
+              Précédent
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage(p => Math.min(Math.ceil(totalCount / itemsPerPage), p + 1))}
+              disabled={page >= Math.ceil(totalCount / itemsPerPage)}
+            >
+              Suivant
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* Product Form Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -508,6 +609,47 @@ export default function Products() {
                   placeholder="XS, S, M, L, XL"
                 />
               </div>
+
+              {/* Colors Section */}
+              <div className="col-span-2">
+                <div className="flex items-center justify-between mb-2">
+                  <Label>Couleurs</Label>
+                  <Button type="button" variant="outline" size="sm" onClick={addColor}>
+                    <Plus className="w-4 h-4 mr-1" />
+                    Ajouter
+                  </Button>
+                </div>
+                <div className="space-y-2">
+                  {formData.colors?.map((color, index) => (
+                    <div key={index} className="flex items-center gap-2">
+                      <Input
+                        placeholder="Nom (ex: Rouge)"
+                        value={color.name}
+                        onChange={(e) => updateColor(index, "name", e.target.value)}
+                        className="flex-1"
+                      />
+                      <Input
+                        type="color"
+                        value={color.hex}
+                        onChange={(e) => updateColor(index, "hex", e.target.value)}
+                        className="w-20"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        onClick={() => removeColor(index)}
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  ))}
+                  {(!formData.colors || formData.colors.length === 0) && (
+                    <p className="text-sm text-muted-foreground">Aucune couleur ajoutée</p>
+                  )}
+                </div>
+              </div>
+
               <div>
                 <Label>Options</Label>
                 <div className="flex flex-wrap gap-4 mt-2">

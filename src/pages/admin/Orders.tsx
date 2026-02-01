@@ -8,6 +8,7 @@ import {
   XCircle,
   Clock,
   Filter,
+  Download,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -63,9 +64,12 @@ const statusOptions = [
 
 export default function Orders() {
   const [orders, setOrders] = useState<Order[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [page, setPage] = useState(1);
+  const [itemsPerPage] = useState(10);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -73,17 +77,28 @@ export default function Orders() {
 
   useEffect(() => {
     fetchOrders();
-  }, []);
+  }, [page, statusFilter]);
 
   const fetchOrders = async () => {
+    setLoading(true);
     try {
-      const { data, error } = await supabase
+      const from = (page - 1) * itemsPerPage;
+      const to = from + itemsPerPage - 1;
+
+      let query = supabase
         .from("orders")
-        .select("*")
+        .select("*", { count: "exact" })
         .order("created_at", { ascending: false });
+
+      if (statusFilter !== "all") {
+        query = query.eq("status", statusFilter);
+      }
+
+      const { data, error, count } = await query.range(from, to);
 
       if (error) throw error;
       setOrders(data || []);
+      setTotalCount(count || 0);
     } catch (error) {
       toast({
         title: "Erreur",
@@ -117,6 +132,30 @@ export default function Orders() {
         .eq("id", orderId);
 
       if (error) throw error;
+
+      // Trigger email notifications based on status
+      const order = orders.find(o => o.id === orderId);
+      if (order) {
+        try {
+          if (newStatus === "shipped") {
+            await supabase.functions.invoke("send-shipping-notification", {
+              body: { orderId, orderNumber: order.order_number },
+            });
+          } else if (newStatus === "delivered") {
+            await supabase.functions.invoke("send-delivery-confirmation", {
+              body: { orderId, orderNumber: order.order_number },
+            });
+          } else if (newStatus === "cancelled") {
+            await supabase.functions.invoke("send-order-cancelled", {
+              body: { orderId, orderNumber: order.order_number },
+            });
+          }
+        } catch (emailError) {
+          // Email failed but status updated
+          console.error("Email notification failed:", emailError);
+        }
+      }
+
       toast({ title: "Statut mis à jour" });
       fetchOrders();
       
@@ -130,6 +169,30 @@ export default function Orders() {
         variant: "destructive",
       });
     }
+  };
+
+  const exportToCSV = () => {
+    const csvData = filteredOrders.map(order => ({
+      "N° Commande": order.order_number,
+      "Date": new Date(order.created_at).toLocaleDateString("fr-FR"),
+      "Statut": getStatusInfo(order.status).label,
+      "Paiement": order.payment_status === "paid" ? "Payée" : "En attente",
+      "Total": `${Number(order.total).toFixed(2)} €`,
+    }));
+
+    const headers = Object.keys(csvData[0] || {});
+    const csv = [
+      headers.join(","),
+      ...csvData.map(row => headers.map(h => `"${row[h as keyof typeof row]}"`).join(","))
+    ].join("\n");
+
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `commandes_${new Date().toISOString().split("T")[0]}.csv`;
+    link.click();
+
+    toast({ title: "Export réussi", description: `${csvData.length} commandes exportées` });
   };
 
   const openOrderDetails = async (order: Order) => {
@@ -181,7 +244,7 @@ export default function Orders() {
             className="pl-10"
           />
         </div>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
+        <Select value={statusFilter} onValueChange={(value) => { setStatusFilter(value); setPage(1); }}>
           <SelectTrigger className="w-48">
             <Filter className="w-4 h-4 mr-2" />
             <SelectValue placeholder="Filtrer par statut" />
@@ -195,6 +258,10 @@ export default function Orders() {
             ))}
           </SelectContent>
         </Select>
+        <Button onClick={exportToCSV} variant="outline" className="gap-2" disabled={filteredOrders.length === 0}>
+          <Download className="w-4 h-4" />
+          Exporter CSV
+        </Button>
       </div>
 
       {/* Orders List */}
@@ -279,6 +346,34 @@ export default function Orders() {
               </Card>
             );
           })}
+        </div>
+      )}
+
+      {/* Pagination */}
+      {filteredOrders.length > 0 && totalCount > itemsPerPage && (
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-muted-foreground">
+            Affichage de {(page - 1) * itemsPerPage + 1} à{" "}
+            {Math.min(page * itemsPerPage, totalCount)} sur {totalCount} commandes
+          </p>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+              disabled={page === 1}
+            >
+              Précédent
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage(p => Math.min(Math.ceil(totalCount / itemsPerPage), p + 1))}
+              disabled={page >= Math.ceil(totalCount / itemsPerPage)}
+            >
+              Suivant
+            </Button>
+          </div>
         </div>
       )}
 
