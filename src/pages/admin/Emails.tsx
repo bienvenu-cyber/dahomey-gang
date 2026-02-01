@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Send, Mail, CheckCircle, AlertCircle } from "lucide-react";
+import { Send, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -40,38 +40,6 @@ export default function Emails() {
         </p>
       </div>
 
-      {/* Resend Info */}
-      <Card className="border-secondary">
-        <CardContent className="p-6">
-          <div className="flex items-start gap-4">
-            <Mail className="w-8 h-8 text-secondary flex-shrink-0" />
-            <div>
-              <h3 className="font-semibold text-lg mb-2">
-                Intégration Resend
-              </h3>
-              <p className="text-muted-foreground mb-4">
-                Pour envoyer des emails (confirmations de commande, notifications, etc.), 
-                vous devez configurer Resend avec votre clé API et un domaine vérifié.
-              </p>
-              <div className="space-y-2 text-sm">
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4 text-green-500" />
-                  <span>Emails transactionnels automatiques</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4 text-green-500" />
-                  <span>Confirmations de commande</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4 text-green-500" />
-                  <span>Notifications d'expédition</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
       {/* Email Templates */}
       <div className="grid md:grid-cols-2 gap-6">
         <Card>
@@ -82,24 +50,18 @@ export default function Emails() {
             {[
               { name: "Confirmation de commande", status: "active" },
               { name: "Commande expédiée", status: "active" },
-              { name: "Commande livrée", status: "inactive" },
-              { name: "Bienvenue", status: "inactive" },
-              { name: "Récupération de panier", status: "inactive" },
+              { name: "Commande livrée", status: "active" },
+              { name: "Bienvenue", status: "active" },
+              { name: "Newsletter", status: "active" },
             ].map((template) => (
               <div
                 key={template.name}
                 className="flex items-center justify-between p-3 bg-muted rounded-lg"
               >
                 <span className="font-medium">{template.name}</span>
-                {template.status === "active" ? (
-                  <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">
-                    Actif
-                  </span>
-                ) : (
-                  <span className="text-xs bg-muted-foreground/20 text-muted-foreground px-2 py-1 rounded">
-                    Inactif
-                  </span>
-                )}
+                <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">
+                  Actif
+                </span>
               </div>
             ))}
           </CardContent>
@@ -158,25 +120,6 @@ export default function Emails() {
           </CardContent>
         </Card>
       </div>
-
-      {/* Setup Instructions */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <AlertCircle className="w-5 h-5 text-secondary" />
-            Configuration requise
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ol className="list-decimal list-inside space-y-2 text-muted-foreground">
-            <li>Créez un compte sur <a href="https://resend.com" target="_blank" rel="noopener noreferrer" className="text-secondary hover:underline">resend.com</a></li>
-            <li>Vérifiez votre domaine email</li>
-            <li>Générez une clé API</li>
-            <li>Ajoutez la clé API comme secret dans le projet</li>
-            <li>Configurez les templates d'emails</li>
-          </ol>
-        </CardContent>
-      </Card>
     </div>
   );
 }

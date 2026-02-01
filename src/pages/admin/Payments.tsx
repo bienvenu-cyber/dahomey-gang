@@ -2,15 +2,12 @@ import { useEffect, useState } from "react";
 import {
   CreditCard,
   Euro,
-  TrendingUp,
   CheckCircle,
   Clock,
   XCircle,
-  ExternalLink,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 
 interface Payment {
   id: string;
@@ -180,16 +177,11 @@ export default function Payments() {
             <CreditCard className="w-8 h-8 text-secondary flex-shrink-0" />
             <div>
               <h3 className="font-semibold text-lg mb-2">
-                Intégration Stripe
+                Paiements en ligne
               </h3>
-              <p className="text-white/70 mb-4">
-                Pour accepter les paiements en ligne, vous pouvez intégrer Stripe. 
-                Cela vous permettra de recevoir des paiements par carte bancaire en toute sécurité.
+              <p className="text-white/70">
+                Intégrez Stripe pour accepter les paiements par carte bancaire en toute sécurité.
               </p>
-              <Button variant="secondary" className="gap-2">
-                <ExternalLink className="w-4 h-4" />
-                Configurer Stripe
-              </Button>
             </div>
           </div>
         </CardContent>
