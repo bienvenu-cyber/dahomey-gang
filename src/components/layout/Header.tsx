@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Menu, X, ShoppingBag, User, Search } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 import CurrencySelector from "@/components/CurrencySelector";
 import SearchModal from "@/components/SearchModal";
@@ -18,6 +19,7 @@ export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const { toggleCart, totalItems, isOpen: isCartOpen } = useCart();
+  const { user } = useAuth();
   const location = useLocation();
 
   useEffect(() => {
@@ -87,9 +89,9 @@ export default function Header() {
               </button>
 
               <Link
-                to="/auth"
+                to={user ? "/profile" : "/auth"}
                 className="p-2 text-white/80 hover:text-secondary transition-colors hidden sm:block"
-                aria-label="Mon compte"
+                aria-label={user ? "Mon profil" : "Se connecter"}
               >
                 <User className="w-5 h-5" />
               </Link>

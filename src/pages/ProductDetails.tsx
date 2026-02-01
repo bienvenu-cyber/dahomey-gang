@@ -6,6 +6,7 @@ import { useCart } from "@/contexts/CartContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import ProductCard from "@/components/products/ProductCard";
 import ShareButton from "@/components/ShareButton";
+import SEO from "@/components/SEO";
 import { cn } from "@/lib/utils";
 
 export default function ProductDetails() {
@@ -93,6 +94,13 @@ export default function ProductDetails() {
 
   return (
     <main className="pt-24 pb-20 min-h-screen bg-background">
+      <SEO
+        title={`${product.name} | Dahomey-Gang`}
+        description={product.description}
+        image={product.images[0] || "https://dahomeyboy.maxiimarket.com/placeholder.svg"}
+        url={`https://dahomeyboy.maxiimarket.com/product/${product.slug}`}
+        type="product"
+      />
       <div className="container-custom">
         {/* Breadcrumb */}
         <nav className="flex items-center gap-2 text-sm mb-8">

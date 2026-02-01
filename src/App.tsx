@@ -28,6 +28,8 @@ import FAQ from "@/pages/FAQ";
 import Terms from "@/pages/Terms";
 import Privacy from "@/pages/Privacy";
 import Cookies from "@/pages/Cookies";
+import Contact from "@/pages/Contact";
+import Profile from "@/pages/Profile";
 import NotFound from "@/pages/NotFound";
 
 // Lazy load admin pages
@@ -98,6 +100,8 @@ const App = () => (
                       <Route path="/terms" element={<Terms />} />
                       <Route path="/privacy" element={<Privacy />} />
                       <Route path="/cookies" element={<Cookies />} />
+                      <Route path="/contact" element={<Contact />} />
+                      <Route path="/profile" element={<Profile />} />
                       <Route path="*" element={<NotFound />} />
                     </Routes>
                     <Footer />

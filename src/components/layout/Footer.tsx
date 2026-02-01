@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { Instagram, Facebook, Twitter, Mail, MapPin, Phone, ExternalLink } from "lucide-react";
+import NewsletterForm from "@/components/NewsletterForm";
 
 const footerLinks = {
   shop: [
@@ -13,6 +14,7 @@ const footerLinks = {
     { name: "Livraison", path: "/shipping" },
     { name: "Retours", path: "/returns" },
     { name: "FAQ", path: "/faq" },
+    { name: "Contact", path: "/contact" },
   ],
   legal: [
     { name: "CGV", path: "/terms" },
@@ -45,16 +47,7 @@ export default function Footer() {
                 Recevez les dernières nouveautés et offres exclusives
               </p>
             </div>
-            <form className="flex w-full md:w-auto gap-3">
-              <input
-                type="email"
-                placeholder="Votre email"
-                className="flex-1 md:w-72 px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder:text-white/50 focus:outline-none focus:border-secondary transition-colors"
-              />
-              <button type="submit" className="btn-secondary whitespace-nowrap">
-                S'inscrire
-              </button>
-            </form>
+            <NewsletterForm />
           </div>
         </div>
       </div>

@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { Search, Filter, X, ChevronDown, Grid, LayoutGrid, Loader2 } from "lucide-react";
 import { useProducts, useCategories } from "@/hooks/useProducts";
 import ProductCard from "@/components/products/ProductCard";
+import AdvancedFilters from "@/components/AdvancedFilters";
 import SEO from "@/components/SEO";
 import { cn } from "@/lib/utils";
 
@@ -26,6 +27,8 @@ export default function Shop() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [gridCols, setGridCols] = useState<2 | 3>(3);
+  const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
+  const [selectedColors, setSelectedColors] = useState<string[]>([]);
 
   const { data: products = [], isLoading } = useProducts();
   const { data: categories = [] } = useCategories();
@@ -49,6 +52,8 @@ export default function Shop() {
   const clearFilters = () => {
     setSearchParams({});
     setSearchQuery("");
+    setSelectedSizes([]);
+    setSelectedColors([]);
   };
 
   const filteredProducts = useMemo(() => {
@@ -85,6 +90,20 @@ export default function Shop() {
       );
     }
 
+    // Size filter
+    if (selectedSizes.length > 0) {
+      filtered = filtered.filter((p) =>
+        p.sizes?.some((size) => selectedSizes.includes(size))
+      );
+    }
+
+    // Color filter
+    if (selectedColors.length > 0) {
+      filtered = filtered.filter((p) =>
+        p.colors?.some((color) => selectedColors.includes(color.name))
+      );
+    }
+
     // Sorting
     switch (sortBy) {
       case "newest":
@@ -102,9 +121,15 @@ export default function Shop() {
     }
 
     return filtered;
-  }, [products, categoryFilter, priceFilter, sortBy, searchQuery, featured]);
+  }, [products, categoryFilter, priceFilter, sortBy, searchQuery, featured, selectedSizes, selectedColors]);
 
-  const activeFiltersCount = [categoryFilter, priceFilter, featured].filter(Boolean).length;
+  const activeFiltersCount = [
+    categoryFilter,
+    priceFilter,
+    featured,
+    selectedSizes.length > 0,
+    selectedColors.length > 0,
+  ].filter(Boolean).length;
 
   return (
     <main className="pt-24 pb-20 min-h-screen bg-background">
@@ -314,6 +339,22 @@ export default function Shop() {
                 </button>
               </span>
             )}
+            {selectedSizes.map((size) => (
+              <span key={size} className="inline-flex items-center gap-2 px-3 py-1 bg-secondary/10 text-primary rounded-full text-sm">
+                Taille: {size}
+                <button onClick={() => setSelectedSizes(selectedSizes.filter((s) => s !== size))}>
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            ))}
+            {selectedColors.map((color) => (
+              <span key={color} className="inline-flex items-center gap-2 px-3 py-1 bg-secondary/10 text-primary rounded-full text-sm">
+                Couleur: {color}
+                <button onClick={() => setSelectedColors(selectedColors.filter((c) => c !== color))}>
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            ))}
             <button
               onClick={clearFilters}
               className="text-sm text-accent hover:text-accent/80 font-medium"
@@ -322,6 +363,17 @@ export default function Shop() {
             </button>
           </div>
         )}
+
+        {/* Advanced Filters */}
+        <div className="mb-8">
+          <AdvancedFilters
+            products={products}
+            selectedSizes={selectedSizes}
+            selectedColors={selectedColors}
+            onSizesChange={setSelectedSizes}
+            onColorsChange={setSelectedColors}
+          />
+        </div>
 
         {/* Products Grid */}
         {isLoading ? (
