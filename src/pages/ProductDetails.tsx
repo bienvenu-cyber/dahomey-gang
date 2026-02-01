@@ -26,6 +26,7 @@ export default function ProductDetails() {
   const [selectedColor, setSelectedColor] = useState<string>("");
   const [quantity, setQuantity] = useState(1);
   const [showWarning, setShowWarning] = useState(false);
+  const [isAdding, setIsAdding] = useState(false);
 
   // Auto-select if only one option
   useEffect(() => {
@@ -81,12 +82,16 @@ export default function ProductDetails() {
       return;
     }
 
+    setIsAdding(true);
+
     // Auto-select if empty but only one option
     const finalSize = selectedSize || (product.sizes.length === 1 ? product.sizes[0] : "") || "Standard";
     const finalColor = selectedColor || (product.colors.length === 1 ? product.colors[0].name : "") || "Défaut";
 
     addItem(product, finalSize, finalColor, quantity);
     setShowWarning(false);
+
+    setTimeout(() => setIsAdding(false), 1000);
   };
 
   const filteredRelated = relatedProducts.filter((p) => p.id !== product.id).slice(0, 4);
@@ -338,9 +343,17 @@ export default function ProductDetails() {
                 {/* Add to Cart */}
                 <button
                   onClick={handleAddToCart}
-                  className="flex-1 btn-secondary"
+                  disabled={isAdding}
+                  className="flex-1 btn-secondary flex items-center justify-center gap-2 disabled:opacity-50"
                 >
-                  Ajouter au panier
+                  {isAdding ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      Ajouté !
+                    </>
+                  ) : (
+                    "Ajouter au panier"
+                  )}
                 </button>
 
                 {/* Favorite */}

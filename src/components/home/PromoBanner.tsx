@@ -4,7 +4,7 @@ import { useCart } from "@/contexts/CartContext";
 
 const promoMessages = [
   { icon: Tag, text: "🔥 -20% sur toute la collection avec le code DAHOMEY20" },
-  { icon: Phone, text: "📞 Service client: +229 XX XX XX XX" },
+  { icon: Phone, text: "📞 Service client: +33 7 59 84 12 47" },
   { icon: Truck, text: "🚚 Livraison gratuite dès 100€ d'achat" },
 ];
 

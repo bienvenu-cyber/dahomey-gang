@@ -49,7 +49,7 @@ export default function AdminLayout() {
 
   // Redirect if not authenticated or not admin
   if (!user) {
-    return <Navigate to="/auth" replace />;
+    return <Navigate to="/auth" replace state={{ from: location.pathname }} />;
   }
 
   if (!isAdmin) {

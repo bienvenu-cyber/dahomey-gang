@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Eye, EyeOff, Mail, Lock, User } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
 
 type AuthMode = "login" | "register";
 
@@ -11,9 +12,10 @@ export default function Auth() {
   const [mode, setMode] = useState<AuthMode>("login");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const { signIn, signUp, user } = useAuth();
+  const { signIn, signUp, user, isAdmin, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [formData, setFormData] = useState({
     email: "",
@@ -24,10 +26,22 @@ export default function Auth() {
   });
 
   useEffect(() => {
-    if (user) {
-      navigate("/");
+    if (user && !authLoading) {
+      // Récupérer l'URL d'origine depuis location.state
+      const from = (location.state as { from?: string })?.from;
+
+      // Si l'utilisateur vient de /admin et est admin, retourner vers /admin
+      if (from?.startsWith("/admin") && isAdmin) {
+        navigate(from);
+      } else if (isAdmin) {
+        // Admin sans URL d'origine → /admin
+        navigate("/admin");
+      } else {
+        // Client → /
+        navigate("/");
+      }
     }
-  }, [user, navigate]);
+  }, [user, isAdmin, authLoading, navigate, location.state]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData((prev) => ({
@@ -68,7 +82,7 @@ export default function Auth() {
           });
         }
       } else {
-        const { error } = await signIn(formData.email, formData.password);
+        const { error, data } = await signIn(formData.email, formData.password);
         
         if (error) {
           toast({
@@ -76,12 +90,33 @@ export default function Auth() {
             description: error.message,
             variant: "destructive",
           });
-        } else {
+        } else if (data?.user) {
+          // Vérifier le rôle admin
+          const { data: roleData } = await supabase
+            .from("user_roles")
+            .select("role")
+            .eq("user_id", data.user.id)
+            .eq("role", "admin")
+            .maybeSingle();
+
+          const userIsAdmin = !!roleData;
+          const from = (location.state as { from?: string })?.from;
+
           toast({
             title: "Connexion réussie",
-            description: "Bienvenue sur Dahomey-Gang !",
+            description: userIsAdmin
+              ? "Bienvenue dans l'espace admin !"
+              : "Bienvenue sur Dahomey-Gang !",
           });
-          navigate("/");
+
+          // Redirection basée sur le rôle et l'URL d'origine
+          if (from?.startsWith("/admin") && userIsAdmin) {
+            navigate(from);
+          } else if (userIsAdmin) {
+            navigate("/admin");
+          } else {
+            navigate("/");
+          }
         }
       }
     } catch (error: any) {

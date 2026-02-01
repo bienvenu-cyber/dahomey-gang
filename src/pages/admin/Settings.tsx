@@ -29,7 +29,7 @@ export default function Settings() {
   const [storeSettings, setStoreSettings] = useState({
     name: "Dahomey-Gang",
     email: "contact@dahomey-gang.com",
-    phone: "+229 XX XX XX XX",
+    phone: "+33 7 59 84 12 47",
     address: "Cotonou",
     city: "Cotonou",
     postalCode: "",

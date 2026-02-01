@@ -177,7 +177,9 @@ export default function Footer() {
               </li>
               <li className="flex items-center gap-2 text-white/70 text-sm">
                 <Phone className="w-4 h-4 text-secondary" />
-                +229 XX XX XX XX
+                <a href="tel:+33759841247" className="hover:text-secondary transition-colors">
+                  +33 7 59 84 12 47
+                </a>
               </li>
               <li className="flex items-start gap-2 text-white/70 text-sm">
                 <MapPin className="w-4 h-4 text-secondary flex-shrink-0 mt-0.5" />

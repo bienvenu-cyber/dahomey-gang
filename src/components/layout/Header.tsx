@@ -18,7 +18,7 @@ export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const { toggleCart, totalItems, isOpen: isCartOpen } = useCart();
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const location = useLocation();
 
   useEffect(() => {
@@ -86,9 +86,9 @@ export default function Header() {
               </button>
 
               <Link
-                to={user ? "/profile" : "/auth"}
+                to={user ? (isAdmin ? "/admin" : "/profile") : "/auth"}
                 className="p-2 text-white/80 hover:text-secondary transition-colors hidden sm:block"
-                aria-label={user ? "Mon profil" : "Se connecter"}
+                aria-label={user ? (isAdmin ? "Admin" : "Mon profil") : "Se connecter"}
               >
                 <User className="w-5 h-5" />
               </Link>
@@ -144,10 +144,10 @@ export default function Header() {
                 </Link>
               ))}
               <Link
-                to="/auth"
+                to={user ? (isAdmin ? "/admin" : "/profile") : "/auth"}
                 className="text-base font-medium uppercase tracking-wider text-white/80 hover:text-secondary transition-colors py-2"
               >
-                Mon Compte
+                {user ? (isAdmin ? "Admin" : "Mon Compte") : "Mon Compte"}
               </Link>
             </nav>
           </div>
