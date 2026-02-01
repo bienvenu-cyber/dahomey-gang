@@ -56,11 +56,11 @@ const handler = async (req: Request): Promise<Response> => {
             <p>N'hésitez pas à partager vos looks sur les réseaux sociaux avec le hashtag <strong>#DahomeyGang</strong></p>
             
             <div style="margin-top: 30px;">
-              <a href="https://dahomey-gang.com/shop" class="btn">Continuer le shopping</a>
+              <a href="https://dahomeyboy.maxiimarket.com/shop" class="btn">Continuer le shopping</a>
             </div>
             
             <p style="margin-top: 40px; font-size: 14px; color: #666;">
-              Un problème avec votre commande ? <a href="mailto:contact@dahomey-gang.com" style="color: #0f1729;">Contactez-nous</a>
+              Un problème avec votre commande ? <a href="mailto:nolhandjiv03@yahoo.com" style="color: #0f1729;">Contactez-nous</a>
             </p>
           </div>
           <div class="footer">
@@ -73,7 +73,7 @@ const handler = async (req: Request): Promise<Response> => {
     `;
 
     const emailResponse = await resend.emails.send({
-      from: "Dahomey-Gang <noreply@dahomey-gang.com>",
+      from: "Dahomey Boy <noreply@dahomeyboy.maxiimarket.com>",
       to: [data.to],
       subject: `Votre commande ${data.orderNumber} a été livrée ! 🎉`,
       html: emailHtml,

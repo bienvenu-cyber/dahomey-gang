@@ -9,7 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 
 // African countries where address is optional
-const africanCountries = ["Bénin", "Togo", "Côte d'Ivoire", "Sénégal", "Mali", "Burkina Faso", "Niger", "Cameroun", "Gabon"];
+const africanCountries = ["Bénin", "Togo", "Côte d'Ivoire", "Sénégal", "Mali", "Burkina Faso", "Niger"];
 
 interface FormData {
   email: string;
@@ -33,7 +33,7 @@ const initialFormData: FormData = {
   address: "",
   city: "",
   postalCode: "",
-  country: "Bénin",
+  country: "France",
   phone: "",
   deliveryMethod: "",
   paymentMethod: "card",
@@ -366,14 +366,19 @@ export default function Checkout() {
                           onChange={handleChange}
                           className="w-full px-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary/50"
                         >
-                          <option>Bénin</option>
                           <option>France</option>
+                          <option>Bénin</option>
                           <option>Togo</option>
                           <option>Côte d'Ivoire</option>
                           <option>Sénégal</option>
-                          <option>Mali</option>
                           <option>Burkina Faso</option>
-                          <option>Cameroun</option>
+                          <option>Mali</option>
+                          <option>Niger</option>
+                          <option>Belgique</option>
+                          <option>Suisse</option>
+                          <option>Luxembourg</option>
+                          <option>Allemagne</option>
+                          <option>Angleterre</option>
                         </select>
                       </div>
                       <div>

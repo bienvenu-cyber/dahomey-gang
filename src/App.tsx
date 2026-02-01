@@ -8,12 +8,13 @@ import { HelmetProvider } from "react-helmet-async";
 import { CartProvider } from "@/contexts/CartContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { CurrencyProvider } from "@/contexts/CurrencyContext";
+import { WishlistProvider } from "@/contexts/WishlistContext";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import CartSidebar from "@/components/cart/CartSidebar";
 import CookieConsent from "@/components/CookieConsent";
 import PromoBanner from "@/components/home/PromoBanner";
-import ChatAssistant from "@/components/ChatAssistant";
+import ContactWidget from "@/components/ContactWidget";
 import ScrollToTop from "@/components/ScrollToTop";
 import Home from "@/pages/Home";
 import Shop from "@/pages/Shop";
@@ -52,7 +53,8 @@ const App = () => (
       <TooltipProvider>
         <AuthProvider>
           <CurrencyProvider>
-            <CartProvider>
+            <WishlistProvider>
+              <CartProvider>
             <Toaster />
           <Sonner />
           <BrowserRouter>
@@ -106,13 +108,14 @@ const App = () => (
                     </Routes>
                     <Footer />
                     <CookieConsent />
-                    <ChatAssistant />
+                    <ContactWidget />
                   </>
                 }
               />
             </Routes>
             </BrowserRouter>
           </CartProvider>
+            </WishlistProvider>
         </CurrencyProvider>
       </AuthProvider>
     </TooltipProvider>

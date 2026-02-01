@@ -65,7 +65,7 @@ const handler = async (req: Request): Promise<Response> => {
             <p style="margin-top: 30px;">Nous espérons vous revoir bientôt chez <strong>Dahomey-Gang</strong>.</p>
             
             <div style="text-align: center;">
-              <a href="https://dahomey-gang.com/shop" class="btn">Retourner à la boutique</a>
+              <a href="https://dahomeyboy.maxiimarket.com/shop" class="btn">Retourner à la boutique</a>
             </div>
           </div>
           <div class="footer">
@@ -78,7 +78,7 @@ const handler = async (req: Request): Promise<Response> => {
     `;
 
     const emailResponse = await resend.emails.send({
-      from: "Dahomey-Gang <noreply@dahomey-gang.com>",
+      from: "Dahomey Boy <noreply@dahomeyboy.maxiimarket.com>",
       to: [data.to],
       subject: `Commande ${data.orderNumber} annulée`,
       html: emailHtml,

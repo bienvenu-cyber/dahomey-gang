@@ -185,23 +185,6 @@ export default function Cart() {
               <Link to="/checkout" className="btn-secondary w-full text-center block">
                 Passer la commande
               </Link>
-
-              {/* Promo Code */}
-              <div className="mt-6">
-                <label className="text-sm font-medium text-primary mb-2 block">
-                  Code promo
-                </label>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    placeholder="Entrer le code"
-                    className="flex-1 px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary/50"
-                  />
-                  <button className="btn-outline py-2 px-4">
-                    Appliquer
-                  </button>
-                </div>
-              </div>
             </div>
           </div>
         </div>

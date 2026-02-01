@@ -20,7 +20,7 @@ serve(async (req) => {
         Authorization: `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: "Dahomey-Gang <noreply@dahomeyboy.maxiimarket.com>",
+        from: "Dahomey Boy <noreply@dahomeyboy.maxiimarket.com>",
         to: [email],
         subject: "Bienvenue dans le Gang ! 🎉",
         html: `

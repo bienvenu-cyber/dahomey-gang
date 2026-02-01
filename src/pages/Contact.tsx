@@ -117,10 +117,10 @@ export default function Contact() {
                   <div>
                     <h3 className="font-semibold text-primary mb-1">Téléphone</h3>
                     <a
-                      href="tel:+229XXXXXXXX"
+                      href="tel:+33759841247"
                       className="text-muted-foreground hover:text-secondary transition-colors"
                     >
-                      +229 XX XX XX XX
+                      +33 7 59 84 12 47
                     </a>
                   </div>
                 </div>

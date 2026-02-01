@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Heart, ShoppingBag, Star } from "lucide-react";
+import { Heart, ShoppingBag, Star, Loader2 } from "lucide-react";
 import { Product } from "@/types/product";
 import { useCart } from "@/contexts/CartContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { useWishlist } from "@/contexts/WishlistContext";
+import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
 interface ProductCardProps {
@@ -13,21 +15,25 @@ interface ProductCardProps {
 export default function ProductCard({ product }: ProductCardProps) {
   const [isImageLoaded, setIsImageLoaded] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
-  const [isFavorite, setIsFavorite] = useState(false);
+  const [isAdding, setIsAdding] = useState(false);
   const { addItem } = useCart();
   const { formatPrice } = useCurrency();
+  const { isInWishlist, toggleWishlist, loading: wishlistLoading } = useWishlist();
+  const { toast } = useToast();
 
   const handleQuickAdd = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    setIsAdding(true);
     // Add with first available size and color
     addItem(product, product.sizes[0], product.colors[0].name);
+    setTimeout(() => setIsAdding(false), 1000);
   };
 
-  const handleFavorite = (e: React.MouseEvent) => {
+  const handleFavorite = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setIsFavorite(!isFavorite);
+    await toggleWishlist(product);
   };
 
   const discount = product.originalPrice
@@ -94,15 +100,17 @@ export default function ProductCard({ product }: ProductCardProps) {
         {/* Favorite button */}
         <button
           onClick={handleFavorite}
+          disabled={wishlistLoading}
           className={cn(
             "absolute top-3 right-3 p-2 rounded-full transition-all duration-300",
-            isFavorite
+            isInWishlist(product.id)
               ? "bg-accent text-white"
-              : "bg-white/80 text-primary hover:bg-accent hover:text-white"
+              : "bg-white/80 text-primary hover:bg-accent hover:text-white",
+            wishlistLoading && "opacity-50 cursor-not-allowed"
           )}
-          aria-label={isFavorite ? "Retirer des favoris" : "Ajouter aux favoris"}
+          aria-label={isInWishlist(product.id) ? "Retirer des favoris" : "Ajouter aux favoris"}
         >
-          <Heart className={cn("w-4 h-4", isFavorite && "fill-current")} />
+          <Heart className={cn("w-4 h-4", isInWishlist(product.id) && "fill-current")} />
         </button>
 
         {/* Quick add button */}
@@ -114,10 +122,20 @@ export default function ProductCard({ product }: ProductCardProps) {
         >
           <button
             onClick={handleQuickAdd}
-            className="w-full bg-secondary text-secondary-foreground py-2 rounded-lg font-semibold text-sm flex items-center justify-center gap-2 hover:bg-secondary/90 transition-colors"
+            disabled={isAdding}
+            className="w-full bg-secondary text-secondary-foreground py-2 rounded-lg font-semibold text-sm flex items-center justify-center gap-2 hover:bg-secondary/90 transition-colors disabled:opacity-50"
           >
-            <ShoppingBag className="w-4 h-4" />
-            Ajouter au panier
+            {isAdding ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Ajouté !
+              </>
+            ) : (
+              <>
+                  <ShoppingBag className="w-4 h-4" />
+                  Ajouter au panier
+              </>
+            )}
           </button>
         </div>
       </div>

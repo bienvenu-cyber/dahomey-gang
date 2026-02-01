@@ -136,7 +136,7 @@ const handler = async (req: Request): Promise<Response> => {
     `;
 
     const emailResponse = await resend.emails.send({
-      from: "Dahomey-Gang <noreply@dahomey-gang.com>",
+      from: "Dahomey Boy <noreply@dahomeyboy.maxiimarket.com>",
       to: [data.to],
       subject: `Confirmation de votre commande ${data.orderNumber}`,
       html: emailHtml,

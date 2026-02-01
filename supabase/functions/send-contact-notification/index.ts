@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
-const ADMIN_EMAIL = "contact@dahomey-gang.com"; // Email admin
+const ADMIN_EMAIL = "nolhandjiv03@yahoo.com"; // Email admin
 
 serve(async (req) => {
   try {
@@ -21,7 +21,7 @@ serve(async (req) => {
         Authorization: `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: "Dahomey-Gang Contact <noreply@dahomeyboy.maxiimarket.com>",
+        from: "Dahomey Boy Contact <noreply@dahomeyboy.maxiimarket.com>",
         to: [ADMIN_EMAIL],
         reply_to: email,
         subject: `[Contact] ${subject || "Nouveau message"}`,

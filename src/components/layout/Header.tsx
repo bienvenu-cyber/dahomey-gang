@@ -4,7 +4,6 @@ import { Menu, X, ShoppingBag, User, Search } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
-import CurrencySelector from "@/components/CurrencySelector";
 import SearchModal from "@/components/SearchModal";
 
 const navLinks = [
@@ -78,8 +77,6 @@ export default function Header() {
 
             {/* Actions */}
             <div className="flex items-center gap-2 sm:gap-4">
-              <CurrencySelector />
-              
               <button
                 onClick={() => setIsSearchOpen(true)}
                 className="p-2 text-white/80 hover:text-secondary transition-colors"

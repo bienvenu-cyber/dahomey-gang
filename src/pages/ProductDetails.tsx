@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { ChevronLeft, ChevronRight, Minus, Plus, Heart, Truck, Shield, RefreshCw, Star, Loader2, AlertCircle } from "lucide-react";
-import { useProductBySlug, useProductsByCategory } from "@/hooks/useProducts";
+import { useProductBySlug, useProductsByCategory, useNewProducts } from "@/hooks/useProducts";
 import { useCart } from "@/contexts/CartContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
-import ProductCard from "@/components/products/ProductCard";
+import { useWishlist } from "@/contexts/WishlistContext";
+import ProductCarousel from "@/components/products/ProductCarousel";
 import ShareButton from "@/components/ShareButton";
+import ProductReviews from "@/components/ProductReviews";
 import SEO from "@/components/SEO";
 import { cn } from "@/lib/utils";
 
@@ -13,15 +15,16 @@ export default function ProductDetails() {
   const { slug } = useParams<{ slug: string }>();
   const { addItem } = useCart();
   const { formatPrice } = useCurrency();
+  const { isInWishlist, toggleWishlist } = useWishlist();
   
   const { data: product, isLoading } = useProductBySlug(slug || "");
   const { data: relatedProducts = [] } = useProductsByCategory(product?.category || "");
+  const { data: newProducts = [] } = useNewProducts();
   
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [selectedSize, setSelectedSize] = useState<string>("");
   const [selectedColor, setSelectedColor] = useState<string>("");
   const [quantity, setQuantity] = useState(1);
-  const [isFavorite, setIsFavorite] = useState(false);
   const [showWarning, setShowWarning] = useState(false);
 
   // Auto-select if only one option
@@ -342,15 +345,15 @@ export default function ProductDetails() {
 
                 {/* Favorite */}
                 <button
-                  onClick={() => setIsFavorite(!isFavorite)}
+                  onClick={() => toggleWishlist(product)}
                   className={cn(
                     "p-3 border rounded-lg transition-all",
-                    isFavorite
+                    isInWishlist(product.id)
                       ? "border-accent bg-accent text-white"
                       : "border-border hover:border-accent hover:text-accent"
                   )}
                 >
-                  <Heart className={cn("w-5 h-5", isFavorite && "fill-current")} />
+                  <Heart className={cn("w-5 h-5", isInWishlist(product.id) && "fill-current")} />
                 </button>
               </div>
             </div>
@@ -373,18 +376,23 @@ export default function ProductDetails() {
           </div>
         </div>
 
-        {/* Related Products */}
+        {/* Product Reviews */}
+        <div className="mt-12">
+          <ProductReviews productId={product.id} productName={product.name} />
+        </div>
+
+        {/* Related Products Carousel */}
         {filteredRelated.length > 0 && (
-          <section className="mt-20">
-            <h2 className="font-montserrat text-2xl font-bold text-primary mb-8">
-              Vous aimerez aussi
-            </h2>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-              {filteredRelated.map((p) => (
-                <ProductCard key={p.id} product={p} />
-              ))}
-            </div>
-          </section>
+          <div className="mt-16">
+            <ProductCarousel products={filteredRelated} title="Vous aimerez aussi" />
+          </div>
+        )}
+
+        {/* New Products Carousel */}
+        {newProducts.length > 0 && (
+          <div className="mt-16">
+            <ProductCarousel products={newProducts} title="Nouveautés" />
+          </div>
         )}
       </div>
     </main>

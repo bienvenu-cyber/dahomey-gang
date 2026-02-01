@@ -89,6 +89,23 @@ export const usePromotionProducts = () => {
   });
 };
 
+export const useNewProducts = () => {
+  return useQuery({
+    queryKey: ["products", "new"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("products")
+        .select("*, categories:category_id(slug, name)")
+        .eq("new", true)
+        .order("created_at", { ascending: false })
+        .limit(10);
+
+      if (error) throw error;
+      return (data || []).map(transformProduct);
+    },
+  });
+};
+
 export const useProductsByCategory = (categorySlug: string) => {
   return useQuery({
     queryKey: ["products", "category", categorySlug],
