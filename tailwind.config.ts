@@ -16,6 +16,7 @@ export default {
       fontFamily: {
         poppins: ["Poppins", "sans-serif"],
         montserrat: ["Montserrat", "sans-serif"],
+        brand: ["Black Ops One", "sans-serif"],
       },
       colors: {
         border: "hsl(var(--border))",

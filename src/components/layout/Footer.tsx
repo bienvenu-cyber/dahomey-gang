@@ -64,7 +64,7 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-8">
           {/* Brand */}
           <div className="lg:col-span-2">
-            <Link to="/" className="font-montserrat text-2xl font-bold text-secondary inline-block mb-4">
+            <Link to="/" className="font-brand text-2xl font-normal text-secondary inline-block mb-4">
               DAHOMEY<span className="text-white">-GANG</span>
             </Link>
             <p className="text-white/70 text-sm mb-6 max-w-sm">

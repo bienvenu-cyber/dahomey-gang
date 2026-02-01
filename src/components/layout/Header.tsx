@@ -51,7 +51,7 @@ export default function Header() {
             {/* Logo */}
             <Link 
               to="/" 
-              className="font-montserrat text-2xl md:text-3xl font-bold text-secondary tracking-tight"
+              className="font-brand text-2xl md:text-3xl font-normal text-secondary tracking-tight"
             >
               DAHOMEY<span className="text-white">-GANG</span>
             </Link>

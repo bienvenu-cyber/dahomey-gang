@@ -67,23 +67,23 @@ export default function Home() {
     <main>
       <SEO />
       {/* Hero Section */}
-      <section className="relative min-h-screen flex items-center pt-10">
+      <section className="relative h-[70vh] flex items-center pt-10">
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-opacity duration-1000"
           style={{ backgroundImage: `url(${heroImages[currentHeroImage]})` }}
         />
         <div className="overlay-dark" />
         
-        <div className="container-custom relative z-10 pt-32">
+        <div className="container-custom relative z-10 pt-16">
           <div className="max-w-2xl mx-auto text-center animate-fade-up">
-            <span className="inline-block px-4 py-2 bg-secondary/20 text-secondary rounded-full text-sm font-semibold mb-6">
+            <span className="inline-block px-4 py-2 bg-secondary/20 text-secondary rounded-full text-sm font-semibold mb-4">
               Nouvelle Collection 2025
             </span>
-            <h1 className="font-montserrat text-5xl md:text-7xl font-black text-white leading-tight mb-6">
+            <h1 className="font-brand text-5xl md:text-7xl font-normal text-white leading-tight mb-4">
               L'Héritage du{" "}
               <span className="text-gradient">Dahomey</span>
             </h1>
-            <div className="mb-8 h-16"></div>
+            <div className="mb-6 h-8"></div>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <Link to="/shop" className="btn-secondary inline-flex items-center gap-2 justify-center">
                 Explorer la boutique
@@ -97,7 +97,7 @@ export default function Home() {
         </div>
 
         {/* Scroll indicator */}
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 animate-bounce">
           <div className="w-6 h-10 border-2 border-white/50 rounded-full flex items-start justify-center p-2">
             <div className="w-1 h-2 bg-secondary rounded-full animate-pulse" />
           </div>

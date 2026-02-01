@@ -100,7 +100,7 @@ export default function Auth() {
       <div className="container-custom">
         <div className="max-w-md mx-auto">
           <div className="text-center mb-8">
-            <Link to="/" className="font-montserrat text-3xl font-bold text-primary inline-block">
+            <Link to="/" className="font-brand text-3xl font-normal text-primary inline-block">
               DAHOMEY<span className="text-secondary">-GANG</span>
             </Link>
             <p className="text-muted-foreground mt-2">
