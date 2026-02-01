@@ -180,3 +180,44 @@ export const useShippingSettings = () => {
     },
   });
 };
+
+interface ShippingOptionForCountry {
+  id: string;
+  name: string;
+  description: string | null;
+  price: number;
+  delivery_days_min: number;
+  delivery_days_max: number;
+  free_threshold: number | null;
+  zone_name: string;
+}
+
+export const useShippingOptionsForCountry = (country: string) => {
+  return useQuery<ShippingOptionForCountry[]>({
+    queryKey: ["shipping-options", country],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("get_shipping_options_for_country", {
+        country_name: country,
+      });
+
+      if (error) throw error;
+      return (data || []) as ShippingOptionForCountry[];
+    },
+    enabled: !!country,
+  });
+};
+
+export const useShippingZones = () => {
+  return useQuery({
+    queryKey: ["shipping-zones"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("shipping_zones")
+        .select("*")
+        .order("name");
+
+      if (error) throw error;
+      return data || [];
+    },
+  });
+};

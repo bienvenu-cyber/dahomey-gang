@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { ChevronLeft, CreditCard, Truck, Check, Tag, X, Loader2 } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
-import { useShippingSettings } from "@/hooks/useProducts";
+import { useShippingOptionsForCountry } from "@/hooks/useProducts";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
@@ -45,12 +45,14 @@ const initialFormData: FormData = {
 
 export default function Checkout() {
   const { items, totalPrice, clearCart } = useCart();
-  const { formatPrice, currency } = useCurrency();
+  const { formatPrice } = useCurrency();
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { data: shippingOptions = [], isLoading: shippingLoading } = useShippingSettings();
   
   const [formData, setFormData] = useState<FormData>(initialFormData);
+  const { data: shippingOptionsData, isLoading: shippingLoading } = useShippingOptionsForCountry(formData.country);
+  const shippingOptions = shippingOptionsData ?? [];
+
   const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [step, setStep] = useState<1 | 2 | 3>(1);
@@ -65,10 +67,14 @@ export default function Checkout() {
   } | null>(null);
   const [promoError, setPromoError] = useState("");
 
-  // Set default shipping method when options load
+  // Set default shipping method when options load or country changes
   useEffect(() => {
-    if (shippingOptions.length > 0 && !formData.deliveryMethod) {
-      setFormData(prev => ({ ...prev, deliveryMethod: shippingOptions[0].id }));
+    if (shippingOptions.length > 0) {
+      // Reset shipping method if current one is not available for new country
+      const currentMethodAvailable = shippingOptions.some(s => s.id === formData.deliveryMethod);
+      if (!currentMethodAvailable) {
+        setFormData(prev => ({ ...prev, deliveryMethod: shippingOptions[0].id }));
+      }
     }
   }, [shippingOptions, formData.deliveryMethod]);
 

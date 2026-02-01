@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Save, Store, Truck, Bell, Shield, Loader2 } from "lucide-react";
+import { Save, Store, Truck, Bell, Shield, Loader2, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,6 +19,13 @@ interface ShippingOption {
   delivery_days_max: number;
   free_threshold: number | null;
   is_active: boolean;
+  zone_id: string | null;
+}
+
+interface ShippingZone {
+  id: string;
+  name: string;
+  countries: string[];
 }
 
 export default function Settings() {
@@ -38,6 +45,7 @@ export default function Settings() {
   });
 
   const [shippingOptions, setShippingOptions] = useState<ShippingOption[]>([]);
+  const [shippingZones, setShippingZones] = useState<ShippingZone[]>([]);
 
   const [notificationSettings, setNotificationSettings] = useState({
     orderConfirmation: true,
@@ -49,6 +57,7 @@ export default function Settings() {
 
   useEffect(() => {
     fetchShippingSettings();
+    fetchShippingZones();
   }, []);
 
   const fetchShippingSettings = async () => {
@@ -64,6 +73,20 @@ export default function Settings() {
       // Error fetching shipping settings
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchShippingZones = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("shipping_zones")
+        .select("*")
+        .order("name");
+
+      if (error) throw error;
+      setShippingZones(data || []);
+    } catch (error) {
+      // Error fetching zones
     }
   };
 
@@ -228,90 +251,129 @@ export default function Settings() {
 
         {/* Shipping Settings */}
         <TabsContent value="shipping">
-          <Card>
-            <CardHeader>
-              <CardTitle>Options de livraison</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {loading ? (
-                <div className="flex items-center justify-center py-8">
-                  <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-                </div>
-              ) : (
-                shippingOptions.map((option) => (
-                  <div key={option.id} className="p-4 bg-muted rounded-lg space-y-4">
-                    <div className="flex items-center justify-between">
-                      <h4 className="font-medium">{option.name}</h4>
-                      <Switch
-                        checked={option.is_active}
-                        onCheckedChange={(checked) =>
-                          handleShippingChange(option.id, "is_active", checked)
-                        }
-                      />
-                    </div>
-                    <div className="grid md:grid-cols-4 gap-4">
-                      <div>
-                        <Label>Nom</Label>
-                        <Input
-                          value={option.name}
-                          onChange={(e) =>
-                            handleShippingChange(option.id, "name", e.target.value)
-                          }
-                        />
-                      </div>
-                      <div>
-                        <Label>Prix (€)</Label>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          value={option.price}
-                          onChange={(e) =>
-                            handleShippingChange(option.id, "price", parseFloat(e.target.value))
-                          }
-                        />
-                      </div>
-                      <div>
-                        <Label>Seuil gratuit (€)</Label>
-                        <Input
-                          type="number"
-                          value={option.free_threshold || ""}
-                          onChange={(e) =>
-                            handleShippingChange(
-                              option.id,
-                              "free_threshold",
-                              e.target.value ? parseFloat(e.target.value) : null as unknown as number
-                            )
-                          }
-                          placeholder="Pas de seuil"
-                        />
-                      </div>
-                      <div>
-                        <Label>Délai (jours)</Label>
-                        <div className="flex gap-2">
-                          <Input
-                            type="number"
-                            value={option.delivery_days_min}
-                            onChange={(e) =>
-                              handleShippingChange(option.id, "delivery_days_min", parseInt(e.target.value))
-                            }
-                            placeholder="Min"
-                          />
-                          <Input
-                            type="number"
-                            value={option.delivery_days_max}
-                            onChange={(e) =>
-                              handleShippingChange(option.id, "delivery_days_max", parseInt(e.target.value))
-                            }
-                            placeholder="Max"
-                          />
-                        </div>
-                      </div>
-                    </div>
+          <div className="space-y-6">
+            {/* Zones géographiques */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Zones géographiques</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {loading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
                   </div>
-                ))
-              )}
-            </CardContent>
-          </Card>
+                ) : (
+                  shippingZones.map((zone) => (
+                    <div key={zone.id} className="p-4 bg-muted rounded-lg">
+                      <h4 className="font-medium mb-2">{zone.name}</h4>
+                      <p className="text-sm text-muted-foreground">
+                        {zone.countries.length} pays: {zone.countries.slice(0, 5).join(", ")}
+                        {zone.countries.length > 5 && ` +${zone.countries.length - 5} autres`}
+                      </p>
+                    </div>
+                  ))
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Options de livraison par zone */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Options de livraison</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {loading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+                  </div>
+                ) : (
+                    shippingZones.map((zone) => {
+                      const zoneOptions = shippingOptions.filter(opt => opt.zone_id === zone.id);
+                      return (
+                        <div key={zone.id} className="space-y-4">
+                          <h4 className="font-medium text-lg">{zone.name}</h4>
+                          {zoneOptions.length === 0 ? (
+                            <p className="text-sm text-muted-foreground">Aucune option de livraison pour cette zone</p>
+                          ) : (
+                            zoneOptions.map((option) => (
+                              <div key={option.id} className="p-4 bg-muted rounded-lg space-y-4">
+                                <div className="flex items-center justify-between">
+                                <h5 className="font-medium">{option.name}</h5>
+                                <Switch
+                                  checked={option.is_active}
+                                  onCheckedChange={(checked) =>
+                                    handleShippingChange(option.id, "is_active", checked)
+                                  }
+                                />
+                              </div>
+                              <div className="grid md:grid-cols-4 gap-4">
+                                <div>
+                                  <Label>Nom</Label>
+                                  <Input
+                                    value={option.name}
+                                    onChange={(e) =>
+                                      handleShippingChange(option.id, "name", e.target.value)
+                                    }
+                                  />
+                                </div>
+                                <div>
+                                  <Label>Prix (€)</Label>
+                                  <Input
+                                    type="number"
+                                    step="0.01"
+                                    value={option.price}
+                                    onChange={(e) =>
+                                      handleShippingChange(option.id, "price", parseFloat(e.target.value))
+                                    }
+                                  />
+                                </div>
+                                <div>
+                                  <Label>Seuil gratuit (€)</Label>
+                                  <Input
+                                    type="number"
+                                    value={option.free_threshold || ""}
+                                    onChange={(e) =>
+                                      handleShippingChange(
+                                        option.id,
+                                        "free_threshold",
+                                        e.target.value ? parseFloat(e.target.value) : null as unknown as number
+                                      )
+                                    }
+                                    placeholder="Pas de seuil"
+                                  />
+                                </div>
+                                <div>
+                                  <Label>Délai (jours)</Label>
+                                  <div className="flex gap-2">
+                                    <Input
+                                      type="number"
+                                      value={option.delivery_days_min}
+                                      onChange={(e) =>
+                                        handleShippingChange(option.id, "delivery_days_min", parseInt(e.target.value))
+                                      }
+                                      placeholder="Min"
+                                    />
+                                    <Input
+                                      type="number"
+                                      value={option.delivery_days_max}
+                                      onChange={(e) =>
+                                        handleShippingChange(option.id, "delivery_days_max", parseInt(e.target.value))
+                                      }
+                                      placeholder="Max"
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    );
+                  })
+                )}
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
 
         {/* Notification Settings */}
