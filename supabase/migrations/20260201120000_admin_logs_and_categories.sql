@@ -9,13 +9,14 @@ CREATE TABLE IF NOT EXISTS admin_logs (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_admin_logs_user_id ON admin_logs(user_id);
-CREATE INDEX idx_admin_logs_created_at ON admin_logs(created_at DESC);
-CREATE INDEX idx_admin_logs_entity ON admin_logs(entity_type, entity_id);
+CREATE INDEX IF NOT EXISTS idx_admin_logs_user_id ON admin_logs(user_id);
+CREATE INDEX IF NOT EXISTS idx_admin_logs_created_at ON admin_logs(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_admin_logs_entity ON admin_logs(entity_type, entity_id);
 
 -- RLS for admin_logs
 ALTER TABLE admin_logs ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Admins can view all logs" ON admin_logs;
 CREATE POLICY "Admins can view all logs"
   ON admin_logs FOR SELECT
   TO authenticated
@@ -27,6 +28,7 @@ CREATE POLICY "Admins can view all logs"
     )
   );
 
+DROP POLICY IF EXISTS "Admins can insert logs" ON admin_logs;
 CREATE POLICY "Admins can insert logs"
   ON admin_logs FOR INSERT
   TO authenticated
