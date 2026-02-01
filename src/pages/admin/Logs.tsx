@@ -45,6 +45,25 @@ export default function Logs() {
       const from = (page - 1) * itemsPerPage;
       const to = from + itemsPerPage - 1;
 
+      // Check if admin_logs table exists first
+      const { error: tableCheckError } = await supabase
+        .from("admin_logs")
+        .select("id", { count: "exact", head: true })
+        .limit(1);
+
+      // If table doesn't exist, show empty state
+      if (tableCheckError?.code === "42P01" || tableCheckError?.message?.includes("does not exist")) {
+        setLogs([]);
+        setTotalCount(0);
+        setLoading(false);
+        toast({
+          title: "Table non initialisée",
+          description: "La table des logs n'existe pas encore. Appliquez la migration admin_logs_and_categories.sql",
+          variant: "destructive",
+        });
+        return;
+      }
+
       let query = supabase
         .from("admin_logs")
         .select("*, profiles!admin_logs_user_id_fkey(email, full_name)", { count: "exact" })
@@ -59,12 +78,15 @@ export default function Logs() {
       if (error) throw error;
       setLogs(data || []);
       setTotalCount(count || 0);
-    } catch (error) {
+    } catch (error: any) {
+      console.error("Logs fetch error:", error);
       toast({
         title: "Erreur",
-        description: "Impossible de charger les logs",
+        description: error.message || "Impossible de charger les logs",
         variant: "destructive",
       });
+      setLogs([]);
+      setTotalCount(0);
     } finally {
       setLoading(false);
     }
@@ -150,9 +172,17 @@ export default function Logs() {
         </CardHeader>
         <CardContent>
           {logs.length === 0 ? (
-            <p className="text-muted-foreground text-center py-8">
-              Aucune activité enregistrée
-            </p>
+            <div className="text-center py-8">
+              <p className="text-muted-foreground mb-4">
+                Aucune activité enregistrée
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Pour activer les logs, appliquez la migration :<br />
+                <code className="bg-muted px-2 py-1 rounded text-xs">
+                  supabase/migrations/20260201120000_admin_logs_and_categories.sql
+                </code>
+              </p>
+            </div>
           ) : (
             <div className="space-y-3">
               {logs.map((log) => (
