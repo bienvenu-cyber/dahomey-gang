@@ -9,10 +9,11 @@ import {
   Menu,
   LogOut,
   ChevronRight,
-  BarChart3,
   Mail,
   CreditCard,
   Tag,
+  FolderOpen,
+  Activity,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
@@ -20,13 +21,14 @@ import "@/styles/admin-theme.css";
 
 const navItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/admin" },
-  { icon: BarChart3, label: "Statistiques", path: "/admin/stats" },
   { icon: Package, label: "Produits", path: "/admin/products" },
+  { icon: FolderOpen, label: "Catégories", path: "/admin/categories" },
   { icon: Tag, label: "Codes Promo", path: "/admin/promo-codes" },
   { icon: ShoppingCart, label: "Commandes", path: "/admin/orders" },
   { icon: Users, label: "Clients", path: "/admin/customers" },
   { icon: CreditCard, label: "Paiements", path: "/admin/payments" },
   { icon: Mail, label: "Emails", path: "/admin/emails" },
+  { icon: Activity, label: "Logs", path: "/admin/logs" },
   { icon: Settings, label: "Paramètres", path: "/admin/settings" },
 ];
 

@@ -37,13 +37,14 @@ import NotFound from "@/pages/NotFound";
 const AdminLayout = lazy(() => import("@/pages/admin/AdminLayout"));
 const Dashboard = lazy(() => import("@/pages/admin/Dashboard"));
 const Products = lazy(() => import("@/pages/admin/Products"));
+const Categories = lazy(() => import("@/pages/admin/Categories"));
 const Orders = lazy(() => import("@/pages/admin/Orders"));
-const Stats = lazy(() => import("@/pages/admin/Stats"));
 const Customers = lazy(() => import("@/pages/admin/Customers"));
 const Payments = lazy(() => import("@/pages/admin/Payments"));
 const Emails = lazy(() => import("@/pages/admin/Emails"));
 const Settings = lazy(() => import("@/pages/admin/Settings"));
 const PromoCodes = lazy(() => import("@/pages/admin/PromoCodes"));
+const Logs = lazy(() => import("@/pages/admin/Logs"));
 
 const queryClient = new QueryClient();
 
@@ -71,12 +72,13 @@ const App = () => (
                 >
                   <Route index element={<Suspense fallback={<div>Chargement...</div>}><Dashboard /></Suspense>} />
                   <Route path="products" element={<Suspense fallback={<div>Chargement...</div>}><Products /></Suspense>} />
+                      <Route path="categories" element={<Suspense fallback={<div>Chargement...</div>}><Categories /></Suspense>} />
                   <Route path="promo-codes" element={<Suspense fallback={<div>Chargement...</div>}><PromoCodes /></Suspense>} />
-                  <Route path="orders" element={<Suspense fallback={<div>Chargement...</div>}><Orders /></Suspense>} />
-                  <Route path="stats" element={<Suspense fallback={<div>Chargement...</div>}><Stats /></Suspense>} />
+                      <Route path="orders" element={<Suspense fallback={<div>Chargement...</div>}><Orders /></Suspense>} />
                   <Route path="customers" element={<Suspense fallback={<div>Chargement...</div>}><Customers /></Suspense>} />
                   <Route path="payments" element={<Suspense fallback={<div>Chargement...</div>}><Payments /></Suspense>} />
                   <Route path="emails" element={<Suspense fallback={<div>Chargement...</div>}><Emails /></Suspense>} />
+                      <Route path="logs" element={<Suspense fallback={<div>Chargement...</div>}><Logs /></Suspense>} />
                   <Route path="settings" element={<Suspense fallback={<div>Chargement...</div>}><Settings /></Suspense>} />
               </Route>
 
