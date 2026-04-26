@@ -1,9 +1,11 @@
+require('dotenv').config();
 const { Client } = require('pg');
 
 const client = new Client({
-  connectionString: 'postgresql://dahomey_gang_db_user:bx6mozvxZ61e6oAEh5WBm5vF68TaRGtw@dpg-d08etrndiees7399mphg-a.oregon-postgres.render.com/dahomey_gang_db',
+  connectionString: process.env.RENDER_DB_URL || process.env.SUPABASE_DB_URL,
   ssl: { rejectUnauthorized: false }
 });
+
 
 async function checkDB() {
   try {
