@@ -1,10 +1,14 @@
-require('dotenv').config();
+
 const { Client } = require('pg');
 
+const connectionString = process.env.SUPABASE_DB_URL || process.env.RENDER_DB_URL;
+console.log('Connecting to:', connectionString ? connectionString.split('@')[1] : 'NONE');
+
 const client = new Client({
-  connectionString: process.env.RENDER_DB_URL || process.env.SUPABASE_DB_URL,
+  connectionString: connectionString,
   ssl: { rejectUnauthorized: false }
 });
+
 
 
 async function checkDB() {

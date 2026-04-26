@@ -142,31 +142,6 @@ export default function Footer() {
                   <p className="text-white/50 text-xs mt-1">{partner.description}</p>
                 </li>
               ))}
-              <li className="mt-4">
-                <a
-                  href="https://kamextrading.com/formations"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-secondary hover:text-secondary/80 text-sm transition-colors flex items-center gap-1"
-                >
-                  Formations Trading
-                  <ExternalLink className="w-3 h-3" />
-                </a>
-              </li>
-              <li>
-                <a
-                  href="https://kamextrading.com/signaux"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-white/70 hover:text-secondary text-sm transition-colors flex items-center gap-1"
-                >
-                  Signaux Crypto
-                  <ExternalLink className="w-3 h-3" />
-                </a>
-              </li>
-            </ul>
-          </div>
-
           {/* Contact */}
           <div>
             <h4 className="font-montserrat font-bold text-secondary mb-4">Contact</h4>
@@ -190,25 +165,8 @@ export default function Footer() {
         </div>
       </div>
 
-      {/* Partner Banner */}
-      <div className="border-t border-white/10 bg-white/5">
-        <div className="container-custom py-4">
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-2 text-center">
-            <span className="text-white/60 text-sm">Apprenez à investir avec notre partenaire</span>
-            <a
-              href="https://kamextrading.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-secondary hover:text-secondary/80 font-semibold text-sm flex items-center gap-1 transition-colors"
-            >
-              KamexTrading.com
-              <ExternalLink className="w-3 h-3" />
-            </a>
-          </div>
-        </div>
-      </div>
-
       {/* Bottom Bar */}
+
       <div className="border-t border-white/10">
         <div className="container-custom py-6">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
