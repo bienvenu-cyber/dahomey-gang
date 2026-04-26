@@ -171,7 +171,52 @@
   }
 }
 
+/* Premium Selection */
+::selection {
+  background-color: hsl(var(--secondary) / 0.3);
+  color: hsl(var(--primary));
+}
+
+/* Global Smooth Scroll */
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 100px;
+}
+
+/* Premium Scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(var(--background));
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--primary) / 0.1);
+  border-radius: 5px;
+  border: 2px solid hsl(var(--background));
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--primary) / 0.2);
+}
+
+/* Dahomey-Gang Specific Utilities */
+.text-gold {
+  color: hsl(var(--secondary));
+}
+
+.bg-gold {
+  background-color: hsl(var(--secondary));
+}
+
+.border-gold {
+  border-color: hsl(var(--secondary));
+}
+
 @keyframes fadeUp {
+
   from {
     opacity: 0;
     transform: translateY(30px);

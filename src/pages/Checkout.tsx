@@ -242,19 +242,123 @@ export default function Checkout() {
     
     setIsSubmitting(true);
     
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    
-    toast({
-      title: "Commande confirmée !",
-      description: "Vous recevrez un email de confirmation sous peu.",
-    });
-    
-    clearCart();
-    navigate("/");
-    
-    setIsSubmitting(false);
+    try {
+      // 1. Create the order
+      const { data: userData } = await supabase.auth.getUser();
+      const user = userData?.user;
+
+      const orderData = {
+        user_id: user?.id || null,
+        subtotal: subtotalAfterDiscount,
+        shipping_cost: shipping,
+        total: finalTotal,
+        shipping_address: {
+          address: formData.address,
+          city: formData.city,
+          postalCode: formData.postalCode,
+          country: formData.country,
+          phone: formData.phone,
+          fullName: formData.fullName
+        },
+        billing_address: {
+          address: formData.address,
+          city: formData.city,
+          postalCode: formData.postalCode,
+          country: formData.country,
+        },
+        payment_method: formData.paymentMethod,
+        payment_status: formData.paymentMethod === "cash_on_delivery" ? "pending" : "processing",
+        notes: ""
+      };
+
+      const { data: order, error: orderError } = await supabase
+        .from("orders")
+        .insert(orderData)
+        .select()
+        .single();
+
+      if (orderError) throw orderError;
+
+      // 2. Create order items
+      const orderItems = items.map(item => ({
+        order_id: order.id,
+        product_id: item.product.id,
+        product_name: item.product.name,
+        product_image: item.product.images[0],
+        size: item.size,
+        color: item.color,
+        quantity: item.quantity,
+        unit_price: item.product.price,
+        total_price: item.product.price * item.quantity
+      }));
+
+      const { error: itemsError } = await supabase
+        .from("order_items")
+        .insert(orderItems);
+
+      if (itemsError) throw itemsError;
+
+      // 3. Send confirmation email via Edge Function
+      try {
+        await supabase.functions.invoke("send-order-confirmation", {
+          body: {
+            to: formData.email,
+            customerName: formData.fullName,
+            orderNumber: order.order_number,
+            items: orderItems,
+            subtotal: subtotalAfterDiscount,
+            shippingCost: shipping,
+            total: finalTotal,
+            shippingAddress: {
+              address: formData.address,
+              city: formData.city,
+              postalCode: formData.postalCode,
+              country: formData.country,
+            },
+            currency: "EUR" // Default to EUR for now
+          }
+        });
+        
+        // Also notify admin
+        await supabase.functions.invoke("send-admin-notification", {
+          body: {
+            type: "new_order",
+            adminEmail: "nolhandjiv03@yahoo.com",
+            data: {
+              orderNumber: order.order_number,
+              customerName: formData.fullName,
+              customerEmail: formData.email,
+              total: `${finalTotal.toFixed(2)} €`,
+              itemCount: items.length,
+              adminUrl: `${window.location.origin}/admin/orders`
+            }
+          }
+        });
+      } catch (emailErr) {
+        console.error("Failed to send notification emails:", emailErr);
+        // We don't block the success message if only the email fails
+      }
+
+      toast({
+        title: "Commande confirmée !",
+        description: "Vous recevrez un email de confirmation sous peu.",
+      });
+      
+      clearCart();
+      navigate("/");
+      
+    } catch (error: any) {
+      console.error("Checkout error:", error);
+      toast({
+        title: "Erreur lors de la commande",
+        description: error.message || "Une erreur est survenue. Veuillez réessayer.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
+
 
   return (
     <main className="pt-24 pb-20 min-h-screen bg-muted/30">

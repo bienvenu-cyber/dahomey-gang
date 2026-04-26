@@ -142,13 +142,18 @@ export default function Footer() {
                   <p className="text-white/50 text-xs mt-1">{partner.description}</p>
                 </li>
               ))}
+            </ul>
+          </div>
+
           {/* Contact */}
-          <div>
+          <div className="lg:col-span-1">
             <h4 className="font-montserrat font-bold text-secondary mb-4">Contact</h4>
             <ul className="space-y-3">
               <li className="flex items-center gap-2 text-white/70 text-sm">
                 <Mail className="w-4 h-4 text-secondary" />
-                contact@dahomey-gang.com
+                <a href="mailto:contact@dahomey-gang.com" className="hover:text-secondary transition-colors">
+                  contact@dahomey-gang.com
+                </a>
               </li>
               <li className="flex items-center gap-2 text-white/70 text-sm">
                 <Phone className="w-4 h-4 text-secondary" />
@@ -158,12 +163,13 @@ export default function Footer() {
               </li>
               <li className="flex items-start gap-2 text-white/70 text-sm">
                 <MapPin className="w-4 h-4 text-secondary flex-shrink-0 mt-0.5" />
-                Cotonou, Bénin
+                <span>Cotonou, Bénin</span>
               </li>
             </ul>
           </div>
         </div>
       </div>
+
 
       {/* Bottom Bar */}
 
